@@ -266,3 +266,7 @@ def long_running_analysis(context: mgp.ProcCtx) -> mgp.Record(result=int):
         count += 1
     return mgp.Record(result=count)
 ```
+
+# Full Python API
+
+For a full description of a Pyhton API visit https://memgraph.com/docs/custom-query-modules/python/python-api
