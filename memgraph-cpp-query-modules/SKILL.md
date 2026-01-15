@@ -379,6 +379,40 @@ CALL mg.procedures() YIELD *;    -- List procedures
 CALL mg.functions() YIELD *;     -- List functions
 ```
 
+## Debugging with Logging
+
+Use `mgp_log` to add debug messages (does NOT support printf-style formatting):
+
+```cpp
+#include <mgp.hpp>
+
+void MyProcedure(mgp_list *args, mgp_graph *graph,
+                 mgp_result *result, mgp_memory *memory) {
+    // Log entry point
+    (void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_INFO, "MyProcedure: Starting");
+    
+    // Log dynamic values by concatenating strings
+    std::string value = "some_value";
+    std::string msg = "MyProcedure: Processing value = " + value;
+    (void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_INFO, msg.c_str());
+    
+    // Log errors
+    (void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_ERROR, "MyProcedure: Error occurred");
+}
+```
+
+**Start Memgraph with INFO log level** (default is WARNING):
+```bash
+docker run -d -p 7687:7687 --name memgraph memgraph/memgraph-mage --log-level=INFO
+```
+
+**View logs:**
+```bash
+docker exec memgraph cat /var/log/memgraph/memgraph_$(date +%Y-%m-%d).log | grep "MyProcedure"
+```
+
+**Log levels:** `MGP_LOG_LEVEL_TRACE`, `MGP_LOG_LEVEL_DEBUG`, `MGP_LOG_LEVEL_INFO`, `MGP_LOG_LEVEL_WARNING`, `MGP_LOG_LEVEL_ERROR`
+
 ## Error Handling
 
 ```cpp
