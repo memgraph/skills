@@ -1,6 +1,8 @@
-# C++ Query Modules Reference
+# C++ Query Modules API Reference
 
-## mgp.hpp Types
+Detailed API documentation for Memgraph C++ query modules.
+
+## Core Types
 
 ### mgp::Node
 
@@ -194,6 +196,17 @@ Parameter(std::string_view name, Type type, std::string_view default_value)
 Parameter(std::string_view name, std::pair<Type, Type> list_type)
 ```
 
+**Examples:**
+
+```cpp
+mgp::Parameter("name", mgp::Type::String)                    // Required
+mgp::Parameter("count", mgp::Type::Int, 10)                  // Default int
+mgp::Parameter("enabled", mgp::Type::Bool, true)             // Default bool
+mgp::Parameter("ratio", mgp::Type::Double, 0.85)             // Default double
+mgp::Parameter("label", mgp::Type::String, "Node")           // Default string
+mgp::Parameter("items", {mgp::Type::List, mgp::Type::String}) // List of strings
+```
+
 ### mgp::Return
 
 ```cpp
@@ -236,6 +249,16 @@ mgp_log(mgp_log_level::MGP_LOG_LEVEL_DEBUG, "Debug");
 mgp_log(mgp_log_level::MGP_LOG_LEVEL_ERROR, "Error");
 ```
 
+**Log Levels:**
+
+| Level | Description |
+|-------|-------------|
+| `MGP_LOG_LEVEL_TRACE` | Trace-level messages |
+| `MGP_LOG_LEVEL_DEBUG` | Debug messages |
+| `MGP_LOG_LEVEL_INFO` | Informational messages |
+| `MGP_LOG_LEVEL_WARNING` | Warning messages |
+| `MGP_LOG_LEVEL_ERROR` | Error messages |
+
 ## Exceptions
 
 | Exception | Description |
@@ -249,12 +272,14 @@ mgp_log(mgp_log_level::MGP_LOG_LEVEL_ERROR, "Error");
 | `mgp::ValueConversionException` | Type conversion error |
 | `mgp::SerializationException` | Serialization error |
 
-## Module Locations
+## File Locations
 
 | Path | Description |
 |------|-------------|
-| `/usr/lib/memgraph/query_modules/` | System modules (.so files) |
+| `/usr/lib/memgraph/query_modules/` | Module .so files |
 | `/usr/include/memgraph/mgp.hpp` | C++ API header |
+| `/usr/include/memgraph/mg_exceptions.hpp` | Exception classes |
+| `/usr/include/memgraph/mg_procedure.h` | C API header |
 
 ## Cypher Commands
 
@@ -271,11 +296,12 @@ RETURN module_name.function_name(args);          -- Use function
 
 ## Examples
 
-### Read Procedure with Graph Traversal
+### Degree Distribution Analysis
 
 ```cpp
 #include <memgraph/mgp.hpp>
 #include <memgraph/mg_exceptions.hpp>
+#include <unordered_map>
 
 void DegreeDistribution(mgp_list *args, mgp_graph *memgraph_graph,
                         mgp_result *result, mgp_memory *memory) {
@@ -323,7 +349,7 @@ CALL module.degree_distribution() YIELD degree, count
 RETURN degree, count ORDER BY degree;
 ```
 
-### Write Procedure
+### Write Procedure with Property Update
 
 ```cpp
 void AddComputedProperty(mgp_list *args, mgp_graph *memgraph_graph,
@@ -339,7 +365,6 @@ void AddComputedProperty(mgp_list *args, mgp_graph *memgraph_graph,
         
         for (const auto &node : graph.Nodes()) {
             int64_t degree = node.InDegree() + node.OutDegree();
-            // Note: SetProperty requires std::string, not string_view
             const_cast<mgp::Node&>(node).SetProperty(
                 property_name, mgp::Value(degree));
             count++;
@@ -361,7 +386,7 @@ mgp::AddProcedure(
     module, memory);
 ```
 
-### User-Defined Function
+### User-Defined Function with Node Input
 
 ```cpp
 void VertexDegree(mgp_list *args, mgp_func_context *ctx,
@@ -390,9 +415,12 @@ MATCH (p:Person)
 RETURN p.name, module.vertex_degree(p) AS degree;
 ```
 
-### Path Building (Random Walk)
+### Random Walk Path Building
 
 ```cpp
+#include <cstdlib>
+#include <ctime>
+
 void RandomWalk(mgp_list *args, mgp_graph *memgraph_graph,
                 mgp_result *result, mgp_memory *memory) {
     mgp::MemoryDispatcherGuard guard(memory);
@@ -428,11 +456,11 @@ void RandomWalk(mgp_list *args, mgp_graph *memgraph_graph,
 }
 ```
 
-### Error Handling
+### Safe Node Lookup with Error Handling
 
 ```cpp
-void SafeProcedure(mgp_list *args, mgp_graph *memgraph_graph,
-                   mgp_result *result, mgp_memory *memory) {
+void SafeNodeLookup(mgp_list *args, mgp_graph *memgraph_graph,
+                    mgp_result *result, mgp_memory *memory) {
     mgp::MemoryDispatcherGuard guard(memory);
     const auto arguments = mgp::List(args);
     const auto record_factory = mgp::RecordFactory(result);
@@ -452,7 +480,7 @@ void SafeProcedure(mgp_list *args, mgp_graph *memgraph_graph,
 }
 ```
 
-### Long-Running with Abort Check
+### Long-Running with Graceful Abort
 
 ```cpp
 void LongRunningAnalysis(mgp_list *args, mgp_graph *memgraph_graph,
@@ -470,7 +498,7 @@ void LongRunningAnalysis(mgp_list *args, mgp_graph *memgraph_graph,
         auto record = record_factory.NewRecord();
         record.Insert("count", count);
     } catch (const mgp::MustAbortException &e) {
-        // Handle graceful termination
+        // Return partial result on abort
         auto record = record_factory.NewRecord();
         record.Insert("count", count);
     } catch (const std::exception &e) {
@@ -479,7 +507,51 @@ void LongRunningAnalysis(mgp_list *args, mgp_graph *memgraph_graph,
 }
 ```
 
-# Full C++ API
+### Get Neighbors with Edge Types
 
-For complete API documentation, see the official Memgraph C++ API reference:
+```cpp
+void GetNeighbors(mgp_list *args, mgp_graph *memgraph_graph,
+                  mgp_result *result, mgp_memory *memory) {
+    mgp::MemoryDispatcherGuard guard(memory);
+    const auto arguments = mgp::List(args);
+    const auto record_factory = mgp::RecordFactory(result);
+    
+    try {
+        const auto start_node = arguments[0].ValueNode();
+        
+        // Outgoing neighbors
+        for (const auto &rel : start_node.OutRelationships()) {
+            auto record = record_factory.NewRecord();
+            record.Insert("neighbor", rel.To());
+            record.Insert("edge_type", std::string(rel.Type()));
+            record.Insert("direction", "outgoing");
+        }
+        
+        // Incoming neighbors
+        for (const auto &rel : start_node.InRelationships()) {
+            auto record = record_factory.NewRecord();
+            record.Insert("neighbor", rel.From());
+            record.Insert("edge_type", std::string(rel.Type()));
+            record.Insert("direction", "incoming");
+        }
+    } catch (const std::exception &e) {
+        record_factory.SetErrorMessage(e.what());
+    }
+}
+
+// Registration
+mgp::AddProcedure(GetNeighbors, "get_neighbors",
+    mgp::ProcedureType::Read,
+    {mgp::Parameter("node", mgp::Type::Node)},
+    {mgp::Return("neighbor", mgp::Type::Node),
+     mgp::Return("edge_type", mgp::Type::String),
+     mgp::Return("direction", mgp::Type::String)},
+    module, memory);
+```
+
+---
+
+## Official Documentation
+
+For the complete and latest API documentation, see:
 https://memgraph.com/docs/custom-query-modules/cpp/cpp-api

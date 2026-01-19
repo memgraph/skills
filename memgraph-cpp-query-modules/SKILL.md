@@ -1,7 +1,7 @@
 ---
 name: memgraph-cpp-query-modules
 description: Develop custom query modules in C++ for Memgraph graph database. Use when creating high-performance graph algorithms, procedures (ProcedureType::Read/Write), or functions using the mgp.hpp C++ API. Covers compilation, memory management, graph traversal, and module deployment.
-compatibility: Requires Memgraph instance, clang++ 17.0.2+, CMake 3.10+, C++20
+compatibility: Requires Memgraph instance. Quick dev: clang++ 17.0.2+, CMake 3.10+. Production: memgraph/mgbuild container with toolchain v7 (Clang 20.1.7, CMake 4.0.3). C++20 required.
 metadata:
   version: "1.0.0"
   author: memgraph
@@ -18,14 +18,18 @@ Develop high-performance custom query modules in C++ for Memgraph graph database
 - Build read-only procedures (`ProcedureType::Read`) for data analysis
 - Build write procedures (`ProcedureType::Write`) for graph modification
 - Create user-defined functions for use in Cypher queries
-- Develop algorithms with strict latency requirements
 
 ## Prerequisites
 
-- Memgraph instance running (preferably `memgraph/memgraph-mage` Docker image)
-- C++20 compatible compiler (clang++ 17.0.2 recommended)
+**For Quick Development:**
+- Memgraph instance (`memgraph/memgraph-mage` Docker image)
+- C++20 compatible compiler (clang++ 17.0.2+ recommended)
 - CMake 3.10.0+
-- Header: `/usr/include/memgraph/mgp.hpp`
+
+**For Production Builds:**
+- Docker with `memgraph/mgbuild:v7_ubuntu-24.04` image
+- Toolchain v7: Clang 20.1.7, GCC 15.1.0, CMake 4.0.3
+- See [Production Build with MgBuild](#option-2-production-build-with-mgbuild-toolchain)
 
 ## Quick Reference
 
@@ -36,19 +40,11 @@ Develop high-performance custom query modules in C++ for Memgraph graph database
 | Cypher | `CALL module.proc() YIELD ...` | `RETURN module.func()` |
 | Return | `Record` via `RecordFactory` | `Result::SetValue()` |
 
-### Key Types
-
-| Type | Description |
-|------|-------------|
-| `mgp::Node` | Graph node with properties, labels |
-| `mgp::Relationship` | Edge with type and properties |
-| `mgp::Path` | Sequence of nodes and relationships |
-| `mgp::Value` | Generic value container |
-| `mgp::Graph` | Graph access wrapper |
-| `mgp::RecordFactory` | Creates result records |
-| `mgp::Result` | Function return value |
+For detailed API types and methods, see [references/REFERENCE.md](references/REFERENCE.md).
 
 ## Module Structure
+
+Every C++ query module requires this structure:
 
 ```cpp
 #include <memgraph/mgp.hpp>
@@ -57,16 +53,31 @@ Develop high-performance custom query modules in C++ for Memgraph graph database
 // Procedure implementation
 void MyProcedure(mgp_list *args, mgp_graph *memgraph_graph, 
                  mgp_result *result, mgp_memory *memory) {
-    mgp::MemoryDispatcherGuard guard(memory);  // REQUIRED
-    // Implementation
+    mgp::MemoryDispatcherGuard guard(memory);  // REQUIRED first line
+    const auto arguments = mgp::List(args);
+    const auto record_factory = mgp::RecordFactory(result);
+    
+    try {
+        // Your logic here
+        auto record = record_factory.NewRecord();
+        record.Insert("field_name", value);
+    } catch (const std::exception &e) {
+        record_factory.SetErrorMessage(e.what());
+    }
 }
 
-// Module initialization
+// Module initialization - register procedures and functions
 extern "C" int mgp_init_module(struct mgp_module *module, 
                                 struct mgp_memory *memory) {
     mgp::MemoryDispatcherGuard guard(memory);
-    // Register procedures and functions
-    return 0;  // 0 = success
+    try {
+        mgp::AddProcedure(MyProcedure, "my_procedure",
+            mgp::ProcedureType::Read,
+            {mgp::Parameter("param", mgp::Type::String)},
+            {mgp::Return("field_name", mgp::Type::String)},
+            module, memory);
+    } catch (const std::exception &e) { return 1; }
+    return 0;
 }
 
 extern "C" int mgp_shutdown_module() { return 0; }
@@ -77,48 +88,9 @@ extern "C" int mgp_shutdown_module() { return 0; }
 ### Read Procedure
 
 ```cpp
-void HelloWorld(mgp_list *args, mgp_graph *memgraph_graph,
-                mgp_result *result, mgp_memory *memory) {
-    mgp::MemoryDispatcherGuard guard(memory);
-    
-    const auto arguments = mgp::List(args);
-    const auto record_factory = mgp::RecordFactory(result);
-    
-    try {
-        const auto name = arguments[0].ValueString();
-        auto record = record_factory.NewRecord();
-        record.Insert("message", std::string("Hello, ") + std::string(name) + "!");
-    } catch (const std::exception &e) {
-        record_factory.SetErrorMessage(e.what());
-    }
-}
-
-extern "C" int mgp_init_module(struct mgp_module *module, 
-                                struct mgp_memory *memory) {
-    mgp::MemoryDispatcherGuard guard(memory);
-    
-    try {
-        mgp::AddProcedure(
-            HelloWorld, "hello_world",
-            mgp::ProcedureType::Read,
-            {mgp::Parameter("name", mgp::Type::String)},
-            {mgp::Return("message", mgp::Type::String)},
-            module, memory
-        );
-    } catch (const std::exception &e) { return 1; }
-    return 0;
-}
-
-extern "C" int mgp_shutdown_module() { return 0; }
-```
-
-### Read Procedure with Graph Access
-
-```cpp
 void CountNodesByLabel(mgp_list *args, mgp_graph *memgraph_graph,
                        mgp_result *result, mgp_memory *memory) {
     mgp::MemoryDispatcherGuard guard(memory);
-    
     const auto arguments = mgp::List(args);
     const auto record_factory = mgp::RecordFactory(result);
     const mgp::Graph graph(memgraph_graph);
@@ -128,12 +100,7 @@ void CountNodesByLabel(mgp_list *args, mgp_graph *memgraph_graph,
         int64_t count = 0;
         
         for (const auto &node : graph.Nodes()) {
-            for (const auto &label : node.Labels()) {
-                if (std::string(label) == label_name) {
-                    count++;
-                    break;
-                }
-            }
+            if (node.HasLabel(label_name)) count++;
         }
         
         auto record = record_factory.NewRecord();
@@ -142,6 +109,13 @@ void CountNodesByLabel(mgp_list *args, mgp_graph *memgraph_graph,
         record_factory.SetErrorMessage(e.what());
     }
 }
+
+// Register in mgp_init_module:
+mgp::AddProcedure(CountNodesByLabel, "count_by_label",
+    mgp::ProcedureType::Read,
+    {mgp::Parameter("label", mgp::Type::String)},
+    {mgp::Return("count", mgp::Type::Int)},
+    module, memory);
 ```
 
 ### Write Procedure
@@ -150,19 +124,14 @@ void CountNodesByLabel(mgp_list *args, mgp_graph *memgraph_graph,
 void CreatePerson(mgp_list *args, mgp_graph *memgraph_graph,
                   mgp_result *result, mgp_memory *memory) {
     mgp::MemoryDispatcherGuard guard(memory);
-    
     const auto arguments = mgp::List(args);
     const auto record_factory = mgp::RecordFactory(result);
     mgp::Graph graph(memgraph_graph);
     
     try {
-        const auto name = arguments[0].ValueString();
-        const auto age = arguments[1].ValueInt();
-        
         auto node = graph.CreateNode();
         node.AddLabel("Person");
-        node.SetProperty("name", mgp::Value(name));
-        node.SetProperty("age", mgp::Value(age));
+        node.SetProperty("name", mgp::Value(arguments[0].ValueString()));
         
         auto record = record_factory.NewRecord();
         record.Insert("node", node);
@@ -174,8 +143,7 @@ void CreatePerson(mgp_list *args, mgp_graph *memgraph_graph,
 // Register with ProcedureType::Write
 mgp::AddProcedure(CreatePerson, "create_person",
     mgp::ProcedureType::Write,
-    {mgp::Parameter("name", mgp::Type::String),
-     mgp::Parameter("age", mgp::Type::Int)},
+    {mgp::Parameter("name", mgp::Type::String)},
     {mgp::Return("node", mgp::Type::Node)},
     module, memory);
 ```
@@ -186,17 +154,13 @@ mgp::AddProcedure(CreatePerson, "create_person",
 void Multiply(mgp_list *args, mgp_func_context *ctx, 
               mgp_func_result *res, mgp_memory *memory) {
     mgp::MemoryDispatcherGuard guard(memory);
-    
     const auto arguments = mgp::List(args);
     auto result = mgp::Result(res);
     
-    auto first = arguments[0].ValueInt();
-    auto second = arguments[1].ValueInt();
-    
-    result.SetValue(first * second);
+    result.SetValue(arguments[0].ValueInt() * arguments[1].ValueInt());
 }
 
-// Register function
+// Register in mgp_init_module:
 mgp::AddFunction(Multiply, "multiply",
     {mgp::Parameter("a", mgp::Type::Int),
      mgp::Parameter("b", mgp::Type::Int)},
@@ -206,121 +170,40 @@ mgp::AddFunction(Multiply, "multiply",
 ### Returning Multiple Records
 
 ```cpp
-void GetNeighbors(mgp_list *args, mgp_graph *memgraph_graph,
-                  mgp_result *result, mgp_memory *memory) {
-    mgp::MemoryDispatcherGuard guard(memory);
-    
-    const auto arguments = mgp::List(args);
-    const auto record_factory = mgp::RecordFactory(result);
-    
-    try {
-        const auto start_node = arguments[0].ValueNode();
-        
-        for (const auto &rel : start_node.OutRelationships()) {
-            auto record = record_factory.NewRecord();
-            record.Insert("neighbor", rel.To());
-            record.Insert("edge_type", std::string(rel.Type()));
-        }
-        for (const auto &rel : start_node.InRelationships()) {
-            auto record = record_factory.NewRecord();
-            record.Insert("neighbor", rel.From());
-            record.Insert("edge_type", std::string(rel.Type()));
-        }
-    } catch (const std::exception &e) {
-        record_factory.SetErrorMessage(e.what());
-    }
+for (const auto &rel : start_node.OutRelationships()) {
+    auto record = record_factory.NewRecord();
+    record.Insert("neighbor", rel.To());
+    record.Insert("edge_type", std::string(rel.Type()));
 }
 ```
 
-## Working with Graph Elements
-
-### Node Operations
+### Long-Running with Abort Check
 
 ```cpp
-node.Id().AsInt()           // Get node ID
-node.Labels()               // Iterate labels
-node.HasLabel("Label")      // Check label
-node.Properties()           // Get all properties
-node.GetProperty("key")     // Get property value
-node.InDegree()             // Incoming edge count
-node.OutDegree()            // Outgoing edge count
-node.InRelationships()      // Incoming edges
-node.OutRelationships()     // Outgoing edges
-
-// Write operations
-node.AddLabel("Label")
-node.RemoveLabel("Label")
-node.SetProperty("key", mgp::Value(value))
-```
-
-### Relationship Operations
-
-```cpp
-rel.Id().AsInt()            // Get relationship ID
-rel.Type()                  // Get type name
-rel.From()                  // Source node
-rel.To()                    // Target node
-rel.Properties()            // Get all properties
-rel.GetProperty("key")      // Get property value
-```
-
-### Value Type Checking
-
-```cpp
-value.Type()                // Get mgp::Type enum
-value.IsNull()              // Check if null
-value.IsBool()              // Check if bool
-value.IsInt()               // Check if int
-value.IsDouble()            // Check if double
-value.IsString()            // Check if string
-value.IsNode()              // Check if node
-value.ValueBool()           // Get bool value
-value.ValueInt()            // Get int64_t value
-value.ValueDouble()         // Get double value
-value.ValueString()         // Get string_view value
-value.ValueNode()           // Get Node value
-```
-
-## Parameters with Defaults
-
-```cpp
-mgp::Parameter("name", mgp::Type::String)                    // Required
-mgp::Parameter("count", mgp::Type::Int, 10)                  // Default int
-mgp::Parameter("enabled", mgp::Type::Bool, true)             // Default bool
-mgp::Parameter("ratio", mgp::Type::Double, 0.85)             // Default double
-mgp::Parameter("label", mgp::Type::String, "Node")           // Default string
-mgp::Parameter("items", {mgp::Type::List, mgp::Type::String}) // List parameter
-```
-
-## Long-Running with Abort Check
-
-```cpp
-void LongRunningAnalysis(mgp_list *args, mgp_graph *memgraph_graph,
-                         mgp_result *result, mgp_memory *memory) {
-    mgp::MemoryDispatcherGuard guard(memory);
-    const auto record_factory = mgp::RecordFactory(result);
-    auto graph = mgp::Graph(memgraph_graph);
-    
-    int64_t count = 0;
-    try {
-        for (const auto &node : graph.Nodes()) {
-            graph.CheckMustAbort();  // Throws if termination requested
-            count++;
-        }
-        auto record = record_factory.NewRecord();
-        record.Insert("count", count);
-    } catch (const mgp::MustAbortException &e) {
-        auto record = record_factory.NewRecord();
-        record.Insert("count", count);
-    } catch (const std::exception &e) {
-        record_factory.SetErrorMessage(e.what());
-    }
+for (const auto &node : graph.Nodes()) {
+    graph.CheckMustAbort();  // Throws mgp::MustAbortException if terminated
+    // Process node...
 }
 ```
 
 ## Building
 
-### CMakeLists.txt
+### Option 1: Quick Development Build
+
+For rapid prototyping inside the memgraph-mage container:
+
+```bash
+# Start container and install tools
+docker run -p 7687:7687 --name memgraph memgraph/memgraph-mage
+docker exec -it memgraph bash
+apt update -y && apt install -y cmake clang
+
+# Direct compilation
+clang++ -std=c++20 -shared -fPIC \
+    -o /usr/lib/memgraph/query_modules/libmodule.so module.cpp
+```
+
+Or use CMake:
 
 ```cmake
 cmake_minimum_required(VERSION 3.10.0)
@@ -330,39 +213,101 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_COMPILER "clang++")
 
 add_library(my_query_module SHARED my_query_module.cpp)
-
-add_custom_command(TARGET my_query_module POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy 
-    $<TARGET_FILE:my_query_module> 
-    /usr/lib/memgraph/query_modules/libmy_query_module.so)
 ```
-
-### Build Commands
 
 ```bash
-# Inside Memgraph container
-apt update -y && apt install -y cmake clang
-
-# Build with CMake
 mkdir build && cd build && cmake .. && make
-
-# Or direct compilation
-clang++ -std=c++20 -shared -fPIC \
-    -o /usr/lib/memgraph/query_modules/libmodule.so module.cpp
+cp libmy_query_module.so /usr/lib/memgraph/query_modules/
 ```
+
+### Option 2: Production Build with MgBuild Toolchain
+
+Use Memgraph's official toolchain for production-grade builds with ABI compatibility.
+
+#### Setup Module Directory
+
+```
+my_module/
+├── CMakeLists.txt
+├── my_module.cpp
+└── include/
+    └── memgraph/
+        ├── mgp.hpp
+        ├── _mgp.hpp
+        ├── mg_exceptions.hpp
+        └── mg_procedure.h
+```
+
+#### Copy Headers from Memgraph
+
+The MgBuild container does NOT include Memgraph headers:
+
+```bash
+mkdir -p my_module/include/memgraph
+docker cp memgraph:/usr/include/memgraph/. my_module/include/memgraph/
+```
+
+#### CMakeLists.txt for MgBuild
+
+```cmake
+cmake_minimum_required(VERSION 3.14)
+project(my_query_module LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror=switch -Werror=switch-bool")
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+add_library(my_query_module SHARED my_query_module.cpp)
+```
+
+#### Build with MgBuild Container
+
+```bash
+# Pull image (use -arm suffix for Apple Silicon)
+docker pull memgraph/mgbuild:v7_ubuntu-24.04      # AMD64
+docker pull memgraph/mgbuild:v7_ubuntu-24.04-arm  # ARM64
+
+# Build (one-liner)
+docker run --rm --entrypoint /bin/bash \
+  -v $(pwd)/my_module:/home/mg/my_module \
+  -v $(pwd)/output:/home/mg/output \
+  memgraph/mgbuild:v7_ubuntu-24.04-arm -c "
+    source /opt/toolchain-v7/activate
+    cd /home/mg/my_module
+    mkdir -p build && cd build
+    cmake -DCMAKE_BUILD_TYPE=Release ..
+    make
+    cp libmy_query_module.so /home/mg/output/
+  "
+```
+
+> **Note:** The MgBuild container requires `--entrypoint /bin/bash` due to its custom entrypoint.
+
+#### Toolchain Versions
+
+| Toolchain | Clang | GCC | CMake | Supported OS |
+|-----------|-------|-----|-------|--------------|
+| v7 | 20.1.7 | 15.1.0 | 4.0.3 | Ubuntu 24.04, Debian 12, Fedora 41 |
+| v6 | 18.1.8 | 13.2.0 | 3.27.7 | Ubuntu 22.04, Debian 11/12 |
+| v5 | 17.0.2 | 13.2.0 | 3.27.7 | Ubuntu 20.04/22.04, Debian 10/11 |
+
+> **ARM64:** For Apple Silicon or ARM servers, append `-arm` to image tag.
 
 ## Deployment
 
-### Develop Inside Container
+### Deploy Built Module
 
 ```bash
-docker run -p 7687:7687 --name memgraph memgraph/memgraph-mage
-docker exec -it memgraph bash
-apt update -y && apt install -y cmake clang
-# Build and deploy...
+# Copy module to Memgraph container
+docker cp output/libmy_query_module.so memgraph:/usr/lib/memgraph/query_modules/
+
+# Reload modules
+docker exec memgraph bash -c "echo 'CALL mg.load_all();' | mgconsole"
 ```
 
-### Volume Mount
+### Volume Mount (Development)
 
 ```bash
 docker run -d -p 7687:7687 \
@@ -370,7 +315,7 @@ docker run -d -p 7687:7687 \
   --name memgraph memgraph/memgraph-mage
 ```
 
-## Module Management (Cypher)
+### Module Management (Cypher)
 
 ```cypher
 CALL mg.load_all();              -- Load all modules
@@ -379,51 +324,39 @@ CALL mg.procedures() YIELD *;    -- List procedures
 CALL mg.functions() YIELD *;     -- List functions
 ```
 
-## Debugging with Logging
+## Debugging
 
-Use `mgp_log` to add debug messages (does NOT support printf-style formatting):
+### Logging
 
 ```cpp
 #include <mgp.hpp>
 
-void MyProcedure(mgp_list *args, mgp_graph *graph,
-                 mgp_result *result, mgp_memory *memory) {
-    // Log entry point
-    (void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_INFO, "MyProcedure: Starting");
-    
-    // Log dynamic values by concatenating strings
-    std::string value = "some_value";
-    std::string msg = "MyProcedure: Processing value = " + value;
-    (void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_INFO, msg.c_str());
-    
-    // Log errors
-    (void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_ERROR, "MyProcedure: Error occurred");
-}
+// Inside procedure (no printf-style formatting)
+(void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_INFO, "Starting procedure");
+
+std::string msg = "Value = " + std::to_string(value);
+(void)mgp_log(mgp_log_level::MGP_LOG_LEVEL_INFO, msg.c_str());
 ```
 
-**Start Memgraph with INFO log level** (default is WARNING):
+Start Memgraph with INFO log level:
 ```bash
 docker run -d -p 7687:7687 --name memgraph memgraph/memgraph-mage --log-level=INFO
 ```
 
-**View logs:**
+View logs:
 ```bash
-docker exec memgraph cat /var/log/memgraph/memgraph_$(date +%Y-%m-%d).log | grep "MyProcedure"
+docker exec memgraph cat /var/log/memgraph/memgraph_$(date +%Y-%m-%d).log
 ```
 
-**Log levels:** `MGP_LOG_LEVEL_TRACE`, `MGP_LOG_LEVEL_DEBUG`, `MGP_LOG_LEVEL_INFO`, `MGP_LOG_LEVEL_WARNING`, `MGP_LOG_LEVEL_ERROR`
-
-## Error Handling
+### Error Handling
 
 ```cpp
 try {
     // Procedure logic
 } catch (const mgp::NotFoundException &e) {
     record_factory.SetErrorMessage("Node not found");
-} catch (const mgp::InvalidArgumentException &e) {
-    record_factory.SetErrorMessage("Invalid argument");
 } catch (const mgp::MustAbortException &e) {
-    // Handle termination
+    // Handle graceful termination
 } catch (const std::exception &e) {
     record_factory.SetErrorMessage(e.what());
 }
@@ -431,23 +364,20 @@ try {
 
 ## Best Practices
 
-1. **Memory Guard**: Always use `mgp::MemoryDispatcherGuard guard(memory)` first
+1. **Memory Guard**: Always use `mgp::MemoryDispatcherGuard guard(memory)` as first line
 2. **Exception Handling**: Never let exceptions escape module boundaries
-3. **Error Messages**: Use `record_factory.SetErrorMessage()` for errors
-4. **Thread Safety**: Avoid global state
-5. **Performance**: Use `graph.CheckMustAbort()` in long loops
-6. **Type Safety**: Check value types before conversion
+3. **Abort Check**: Use `graph.CheckMustAbort()` in long loops
+4. **Type Safety**: Check value types with `value.IsInt()` etc. before conversion
 
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
 | Module not loading | Check .so in `/usr/lib/memgraph/query_modules/` |
-| Segmentation fault | Check null pointers, memory guard usage |
-| Module crashes Memgraph | Handle all exceptions |
-| Type errors | Use `Value.Is[TYPE]()` checks |
+| Segmentation fault | Check null pointers, verify memory guard usage |
+| Module crashes | Handle all exceptions, don't let them escape |
 | Procedure not found | Run `CALL mg.load_all();` |
 
 ## Additional Resources
 
-For detailed API documentation and examples, see [references/REFERENCE.md](references/REFERENCE.md).
+For detailed API documentation, type references, and more examples, see [references/REFERENCE.md](references/REFERENCE.md).
