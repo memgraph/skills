@@ -1,7 +1,7 @@
 ---
 name: memgraph-rust-query-modules
 description: Develop custom query modules in Rust for Memgraph graph database. Use when user asks to create Rust procedures, implement graph algorithms in Rust, build high-performance query modules, or work with the rsmgp-sys Rust API. Covers module structure, compilation with Cargo, graph traversal, vertex/edge operations, and deployment to Memgraph.
-compatibility: Requires Memgraph instance (memgraph/memgraph-mage Docker image recommended). Rust/Cargo toolchain installed inside container.
+compatibility: Requires Memgraph instance. Build with memgraph/mgbuild container with toolchain v7 (Rust 1.80 pre-installed).
 metadata:
   author: memgraph
   version: "1.0.0"
@@ -21,9 +21,9 @@ Develop high-performance custom query modules in Rust for Memgraph graph databas
 
 ## Prerequisites
 
-- Memgraph instance (`memgraph/memgraph-mage` Docker image)
-- Rust toolchain (cargo) - installed inside container
-- Access to `/mage/rust` directory with `rsmgp-sys` crate
+- Docker with `memgraph/mgbuild:v7_ubuntu-24.04` image
+- Toolchain v7: Clang 20.1.7, GCC 15.1.0, CMake 4.0.3, Rust 1.80 (pre-installed)
+- Memgraph instance for deployment (`memgraph/memgraph-mage` Docker image)
 
 ## Quick Reference
 
@@ -33,7 +33,7 @@ Develop high-performance custom query modules in Rust for Memgraph graph databas
 | Init Macro | `init_module!` |
 | Procedure Macro | `define_procedure!` |
 | Close Macro | `close_module!` |
-| Build Command | `python3 setup build -p /usr/lib/memgraph/query_modules/` |
+| Build Command | `cargo build --release` |
 
 ### Key Types
 
@@ -175,325 +175,148 @@ CALL my_module.hello_world("Memgraph") YIELD message;
 
 ### Procedure with Optional Parameters
 
+Use `define_optional_type!` macro with a default value:
+
 ```rust
-use rsmgp_sys::{define_optional_type, define_type};
-
-init_module!(|memgraph: &Memgraph| -> Result<()> {
-    memgraph.add_read_procedure(
-        procedure_with_optional,
-        c_str!("procedure_with_optional"),
-        &[define_type!("required_param", Type::String)],
-        &[define_optional_type!(
-            "optional_count",
-            &MgpValue::make_int(10, &memgraph)?,  // default value
-            Type::Int
-        )],
-        &[
-            define_type!("result_string", Type::String),
-            define_type!("result_int", Type::Int),
-        ],
-    )?;
-    Ok(())
-});
-
-define_procedure!(procedure_with_optional, |memgraph: &Memgraph| -> Result<()> {
-    let result = memgraph.result_record()?;
-    let args = memgraph.args()?;
-    
-    let string_value = args.value_at(0)?;
-    let int_value = args.value_at(1)?;
-    
-    result.insert_mgp_value(c_str!("result_string"), &string_value.to_mgp_value(&memgraph)?)?;
-    result.insert_mgp_value(c_str!("result_int"), &int_value.to_mgp_value(&memgraph)?)?;
-    
-    Ok(())
-});
+memgraph.add_read_procedure(
+    my_proc,
+    c_str!("my_proc"),
+    &[define_type!("required_param", Type::String)],
+    &[define_optional_type!(
+        "optional_count",
+        &MgpValue::make_int(10, &memgraph)?,  // default value
+        Type::Int
+    )],
+    &[define_type!("result", Type::Int)],
+)?;
 ```
 
 ### Iterating Over Graph Vertices
 
 ```rust
-define_procedure!(count_nodes, |memgraph: &Memgraph| -> Result<()> {
-    let result = memgraph.result_record()?;
-    
-    let mut count: i64 = 0;
-    for _vertex in memgraph.vertices_iter()? {
-        count += 1;
-    }
-    
-    result.insert_int(c_str!("count"), count)?;
-    
-    Ok(())
-});
+let mut count: i64 = 0;
+for vertex in memgraph.vertices_iter()? {
+    count += 1;
+}
+result.insert_int(c_str!("count"), count)?;
 ```
 
 ### Accessing Vertex Properties and Labels
 
 ```rust
-define_procedure!(vertex_info, |memgraph: &Memgraph| -> Result<()> {
-    let args = memgraph.args()?;
+if let Value::Vertex(vertex) = args.value_at(0)? {
+    let vertex_id = vertex.id();
+    let label_count = vertex.labels_count()?;
+    let first_label = vertex.label_at(0)?;
+    let name_prop = vertex.property(c_str!("name"))?;
     
-    if let Value::Vertex(vertex) = args.value_at(0)? {
-        let result = memgraph.result_record()?;
-        
-        // Get vertex ID
-        let vertex_id = vertex.id();
-        result.insert_int(c_str!("id"), vertex_id)?;
-        
-        // Get labels count
-        let label_count = vertex.labels_count()?;
-        result.insert_int(c_str!("label_count"), label_count as i64)?;
-        
-        // Get first label if exists
-        if label_count > 0 {
-            let label = vertex.label_at(0)?;
-            result.insert_string(c_str!("first_label"), &label)?;
-        }
-        
-        // Get property
-        let name_prop = vertex.property(c_str!("name"))?;
-        result.insert_mgp_value(c_str!("name"), &name_prop.value.to_mgp_value(&memgraph)?)?;
-    }
-    
-    Ok(())
-});
+    result.insert_int(c_str!("id"), vertex_id)?;
+    result.insert_string(c_str!("first_label"), &first_label)?;
+}
 ```
 
 ### Working with Edges
 
 ```rust
-define_procedure!(get_neighbors, |memgraph: &Memgraph| -> Result<()> {
-    let args = memgraph.args()?;
-    
-    if let Value::Vertex(vertex) = args.value_at(0)? {
-        // Iterate outgoing edges
-        for edge in vertex.out_edges()? {
-            let result = memgraph.result_record()?;
-            
-            let neighbor = edge.to_vertex()?;
-            let edge_type = edge.edge_type()?;
-            
-            result.insert_vertex(c_str!("neighbor"), &neighbor)?;
-            result.insert_string(c_str!("edge_type"), &edge_type)?;
-        }
-        
-        // Iterate incoming edges
-        for edge in vertex.in_edges()? {
-            let result = memgraph.result_record()?;
-            
-            let neighbor = edge.from_vertex()?;
-            let edge_type = edge.edge_type()?;
-            
-            result.insert_vertex(c_str!("neighbor"), &neighbor)?;
-            result.insert_string(c_str!("edge_type"), &edge_type)?;
-        }
+if let Value::Vertex(vertex) = args.value_at(0)? {
+    // Outgoing edges
+    for edge in vertex.out_edges()? {
+        let neighbor = edge.to_vertex()?;
+        let edge_type = edge.edge_type()?;
+        result.insert_vertex(c_str!("neighbor"), &neighbor)?;
     }
-    
-    Ok(())
-});
+    // Incoming edges
+    for edge in vertex.in_edges()? {
+        let neighbor = edge.from_vertex()?;
+    }
+}
 ```
 
 ### Returning Multiple Records
 
 ```rust
-define_procedure!(all_vertices, |memgraph: &Memgraph| -> Result<()> {
-    for vertex in memgraph.vertices_iter()? {
-        let result = memgraph.result_record()?;
-        result.insert_vertex(c_str!("node"), &vertex)?;
-        result.insert_int(c_str!("id"), vertex.id())?;
-    }
-    
-    Ok(())
-});
+for vertex in memgraph.vertices_iter()? {
+    let result = memgraph.result_record()?;  // New record per iteration
+    result.insert_vertex(c_str!("node"), &vertex)?;
+}
 ```
 
 ### Working with Lists
 
 ```rust
-define_procedure!(process_list, |memgraph: &Memgraph| -> Result<()> {
-    let args = memgraph.args()?;
-    let result = memgraph.result_record()?;
-    
-    if let Value::List(input_list) = args.value_at(0)? {
-        // Create output list
-        let output_list = List::make_empty(input_list.size(), &memgraph)?;
-        
-        for i in 0..input_list.size() {
-            let value = input_list.value_at(i)?;
-            // Process value and append to output
-            output_list.append_extend(&value.to_mgp_value(&memgraph)?)?;
-        }
-        
-        result.insert_list(c_str!("processed"), &output_list)?;
+if let Value::List(input_list) = args.value_at(0)? {
+    let output_list = List::make_empty(input_list.size(), &memgraph)?;
+    for i in 0..input_list.size() {
+        let value = input_list.value_at(i)?;
+        output_list.append_extend(&value.to_mgp_value(&memgraph)?)?;
     }
-    
-    Ok(())
-});
+    result.insert_list(c_str!("processed"), &output_list)?;
+}
 ```
 
 ### Working with Maps
 
 ```rust
-define_procedure!(create_map, |memgraph: &Memgraph| -> Result<()> {
-    let result = memgraph.result_record()?;
-    
-    let map = Map::make_empty(&memgraph)?;
-    
-    let key1 = MgpValue::make_string(c_str!("value1"), &memgraph)?;
-    let key2 = MgpValue::make_int(42, &memgraph)?;
-    
-    map.insert(c_str!("key1"), &key1)?;
-    map.insert(c_str!("key2"), &key2)?;
-    
-    result.insert_map(c_str!("data"), &map)?;
-    
-    Ok(())
-});
+let map = Map::make_empty(&memgraph)?;
+map.insert(c_str!("key1"), &MgpValue::make_string(c_str!("value1"), &memgraph)?)?;
+map.insert(c_str!("key2"), &MgpValue::make_int(42, &memgraph)?)?;
+result.insert_map(c_str!("data"), &map)?;
 ```
 
 ### Long-Running with Abort Check
 
 ```rust
-define_procedure!(long_running, |memgraph: &Memgraph| -> Result<()> {
-    let result = memgraph.result_record()?;
-    let mut count: i64 = 0;
-    
-    for vertex in memgraph.vertices_iter()? {
-        // Check if procedure should abort
-        if memgraph.must_abort() {
-            break;
-        }
-        
-        // Expensive computation...
-        count += 1;
+for vertex in memgraph.vertices_iter()? {
+    if memgraph.must_abort() {
+        break;  // Graceful termination
     }
-    
-    result.insert_int(c_str!("processed"), count)?;
-    
-    Ok(())
-});
+    // Expensive computation...
+}
 ```
 
 ### Working with Paths
 
 ```rust
-define_procedure!(build_path, |memgraph: &Memgraph| -> Result<()> {
-    let args = memgraph.args()?;
-    let result = memgraph.result_record()?;
-    
-    if let Value::Vertex(start_vertex) = args.value_at(0)? {
-        // Create path starting with vertex
-        let path = Path::make_with_start(&start_vertex, &memgraph)?;
-        
-        // Expand path with edges
-        for edge in start_vertex.out_edges()? {
-            path.expand(&edge)?;
-            break;  // Just add first edge for example
-        }
-        
-        result.insert_path(c_str!("path"), &path)?;
-        result.insert_int(c_str!("length"), path.size() as i64)?;
+if let Value::Vertex(start_vertex) = args.value_at(0)? {
+    let path = Path::make_with_start(&start_vertex, &memgraph)?;
+    for edge in start_vertex.out_edges()? {
+        path.expand(&edge)?;
+        break;  // Add first edge
     }
-    
-    Ok(())
-});
-```
-
-## Value Types
-
-The `Value` enum represents all possible Memgraph types:
-
-```rust
-pub enum Value {
-    Null,
-    Bool(bool),
-    Int(i64),
-    Float(f64),
-    String(CString),
-    Vertex(Vertex),
-    Edge(Edge),
-    Path(Path),
-    List(List),
-    Map(Map),
-    Date(NaiveDate),
-    LocalTime(NaiveTime),
-    LocalDateTime(NaiveDateTime),
-    Duration(chrono::Duration),
-}
-```
-
-### Type Matching
-
-```rust
-let value = args.value_at(0)?;
-match value {
-    Value::Null => { /* handle null */ },
-    Value::Bool(b) => { /* handle bool */ },
-    Value::Int(i) => { /* handle int */ },
-    Value::Float(f) => { /* handle float */ },
-    Value::String(s) => { /* handle string */ },
-    Value::Vertex(v) => { /* handle vertex */ },
-    Value::Edge(e) => { /* handle edge */ },
-    Value::Path(p) => { /* handle path */ },
-    Value::List(l) => { /* handle list */ },
-    Value::Map(m) => { /* handle map */ },
-    Value::Date(d) => { /* handle date */ },
-    Value::LocalTime(t) => { /* handle time */ },
-    Value::LocalDateTime(dt) => { /* handle datetime */ },
-    Value::Duration(dur) => { /* handle duration */ },
+    result.insert_path(c_str!("path"), &path)?;
 }
 ```
 
 ## Procedure Types
 
-| Macro | Description |
-|-------|-------------|
-| `Type::Null` | Null value |
-| `Type::Bool` | Boolean |
-| `Type::Int` | 64-bit integer |
-| `Type::Double` | Double-precision float |
-| `Type::String` | String |
-| `Type::List` | List of values |
-| `Type::Map` | Map of key-value pairs |
-| `Type::Node` | Graph node (vertex) |
-| `Type::Relationship` | Graph relationship (edge) |
-| `Type::Path` | Graph path |
-| `Type::Date` | Date |
-| `Type::LocalTime` | Local time |
-| `Type::LocalDateTime` | Local date-time |
-| `Type::Duration` | Duration |
-| `Type::Any` | Any type |
+See [references/REFERENCE.md](references/REFERENCE.md) for the complete `Value` enum and `Type` definitions.
 
 ## Building
 
-### Step 1: Start Memgraph MAGE Container
+Use Memgraph's official MgBuild toolchain for production-grade builds with ABI compatibility.
 
-```bash
-docker run -p 7687:7687 -p 7444:7444 --name mage memgraph/memgraph-mage
+### Setup Module Directory
+
+```
+my_rust_module/
+├── Cargo.toml
+├── rsmgp-sys/          # Copied from Memgraph monorepo
+└── src/
+    └── lib.rs
 ```
 
-### Step 2: Enter Container Shell
+### Clone rsmgp-sys Bindings
+
+The MgBuild container does NOT include rsmgp-sys. Clone from the Memgraph monorepo:
 
 ```bash
-docker exec -it -u root mage bash
+git clone --depth 1 --filter=blob:none --sparse https://github.com/memgraph/memgraph.git
+cd memgraph && git sparse-checkout set mage/rust/rsmgp-sys && cd ..
+cp -r memgraph/mage/rust/rsmgp-sys my_rust_module/
 ```
 
-### Step 3: Install Cargo
+### Cargo.toml
 
-```bash
-curl https://sh.rustup.rs -sSf | sh -s -- -y
-export PATH="/root/.cargo/bin:${PATH}"
-```
-
-### Step 4: Create Module Structure
-
-```bash
-cd /mage/rust
-cp -r rsmgp-example my_rust_module
-cd my_rust_module
-```
-
-Update `Cargo.toml`:
 ```toml
 [package]
 name = "my-rust-module-package"
@@ -502,27 +325,46 @@ edition = "2018"
 
 [dependencies]
 c_str_macro = "1.0.2"
-rsmgp-sys = { path = "../rsmgp-sys" }
+rsmgp-sys = { path = "./rsmgp-sys" }
 
 [lib]
 name = "my_rust_module"
 crate-type = ["cdylib"]
 ```
 
-### Step 5: Write Module Code
-
-Edit `src/lib.rs` with your procedure implementations.
-
-### Step 6: Build and Deploy
+### Build with MgBuild Container
 
 ```bash
-cd /mage
-python3 setup build -p /usr/lib/memgraph/query_modules/
+# Pull image (use -arm suffix for Apple Silicon)
+docker pull memgraph/mgbuild:v7_ubuntu-24.04      # AMD64
+docker pull memgraph/mgbuild:v7_ubuntu-24.04-arm  # ARM64
+
+# Build (one-liner)
+docker run --rm --entrypoint /bin/bash \
+  -v $(pwd)/my_rust_module:/home/mg/my_rust_module \
+  -v $(pwd)/output:/home/mg/output \
+  memgraph/mgbuild:v7_ubuntu-24.04-arm -c "
+    source /opt/toolchain-v7/activate
+    source ~/.cargo/env
+    cd /home/mg/my_rust_module
+    cargo build --release
+    cp target/release/libmy_rust_module.so /home/mg/output/
+  "
 ```
 
-The Rust modules compile to `.so` files in `/mage/dist` and are copied to `/usr/lib/memgraph/query_modules/`.
+> **Note:** The MgBuild container has Rust 1.80 pre-installed. To use a different version, run `rustup install 1.85 && rustup default 1.85` before building.
 
-### Step 7: Load Modules
+### Toolchain Versions
+
+| Toolchain | Clang | GCC | CMake | Rust | Supported OS |
+|-----------|-------|-----|-------|------|---------------|
+| v7 | 20.1.7 | 15.1.0 | 4.0.3 | 1.80 | Ubuntu 24.04, Debian 12, Fedora 41 |
+| v6 | 18.1.8 | 13.2.0 | 3.27.7 | 1.80 | Ubuntu 22.04, Debian 11/12 |
+| v5 | 17.0.2 | 13.2.0 | 3.27.7 | 1.80 | Ubuntu 20.04/22.04, Debian 10/11 |
+
+> **ARM64:** For Apple Silicon or ARM servers, append `-arm` to image tag.
+
+### Load Modules
 
 From mgconsole or Memgraph Lab:
 ```cypher
@@ -539,11 +381,8 @@ CALL mg.procedures() YIELD *;
 ### Deploy Built Module
 
 ```bash
-# Copy module from container
-docker cp mage:/usr/lib/memgraph/query_modules/libmy_rust_module.so ./
-
-# Copy to production container
-docker cp libmy_rust_module.so memgraph:/usr/lib/memgraph/query_modules/
+# Copy module to Memgraph container
+docker cp output/libmy_rust_module.so memgraph:/usr/lib/memgraph/query_modules/
 
 # Reload modules
 docker exec memgraph bash -c "echo 'CALL mg.load_all();' | mgconsole"
@@ -567,28 +406,7 @@ CALL mg.procedures() YIELD *;    -- List procedures
 
 ## Error Handling
 
-The `Result<T>` type is used throughout the API. Common errors are defined in the `Error` enum:
-
-```rust
-pub enum Error {
-    UnableToCreateEmptyList,
-    UnableToCopyList,
-    UnableToAppendListValue,
-    UnableToAccessListValueByIndex,
-    UnableToCreateEmptyMap,
-    UnableToInsertMapValue,
-    UnableToAccessMapValue,
-    UnableToCreateGraphVerticesIterator,
-    UnableToFindVertexById,
-    UnableToRegisterReadProcedure,
-    UnableToCreateResultRecord,
-    UnableToInsertResultValue,
-    UnableToCreateCString,
-    // ... and more
-}
-```
-
-### Handling Errors in Procedures
+Use the `Result<T>` type and `?` operator throughout:
 
 ```rust
 define_procedure!(safe_procedure, |memgraph: &Memgraph| -> Result<()> {
@@ -600,17 +418,15 @@ define_procedure!(safe_procedure, |memgraph: &Memgraph| -> Result<()> {
     
     // Or handle errors explicitly
     match memgraph.vertex_by_id(12345) {
-        Ok(vertex) => {
-            result.insert_vertex(c_str!("found"), &vertex)?;
-        },
-        Err(_) => {
-            result.insert_null(c_str!("found"))?;
-        }
+        Ok(vertex) => result.insert_vertex(c_str!("found"), &vertex)?,
+        Err(_) => result.insert_null(c_str!("found"))?,
     }
     
     Ok(())
 });
 ```
+
+See [references/REFERENCE.md](references/REFERENCE.md) for the complete `Error` enum.
 
 ## Best Practices
 
@@ -625,10 +441,10 @@ define_procedure!(safe_procedure, |memgraph: &Memgraph| -> Result<()> {
 | Issue | Solution |
 |-------|----------|
 | Module not loading | Check .so in `/usr/lib/memgraph/query_modules/` |
-| Cargo not found | Run `export PATH="/root/.cargo/bin:${PATH}"` |
+| Cargo not found | Run `source ~/.cargo/env` |
 | Build fails | Check `Cargo.toml` path to `rsmgp-sys` |
 | Procedure not found | Run `CALL mg.load_all();` |
-| Library linking errors | Use matching memgraph-mage-dev version |
+| Library linking errors | Use mgbuild toolchain for production builds |
 
 ## Additional Resources
 

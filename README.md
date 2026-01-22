@@ -11,6 +11,8 @@ Agent Skills are portable instruction sets that enhance AI coding agents with sp
 | Skill | Description |
 |-------|-------------|
 | [memgraph-python-query-modules](memgraph-python-query-modules/) | Develop custom query modules in Python for Memgraph using the mgp API |
+| [memgraph-cpp-query-modules](memgraph-cpp-query-modules/) | Develop custom query modules in C++ for Memgraph using the mgp.hpp API |
+| [memgraph-rust-query-modules](memgraph-rust-query-modules/) | Develop custom query modules in Rust for Memgraph using rsmgp-sys |
 
 ## Usage
 

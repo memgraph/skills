@@ -530,10 +530,9 @@ let chrono = duration.to_chrono_duration();
 
 | Path | Description |
 |------|-------------|
-| `/mage/rust/` | Rust modules source directory |
-| `/mage/rust/rsmgp-sys/` | Memgraph Rust bindings crate |
-| `/mage/rust/rsmgp-example/` | Example module template |
-| `/mage/dist/` | Built module output |
+| `memgraph/mage/rust/` | Rust modules source directory (in monorepo) |
+| `memgraph/mage/rust/rsmgp-sys/` | Memgraph Rust bindings crate |
+| `memgraph/mage/rust/rsmgp-example/` | Example module template |
 | `/usr/lib/memgraph/query_modules/` | Module installation directory |
 
 ## Cypher Commands
@@ -727,4 +726,4 @@ define_procedure!(pagerank, |memgraph: &Memgraph| -> Result<()> {
 For the complete Rust API documentation, visit:
 - [Rust API Documentation](https://memgraph.com/docs/custom-query-modules/rust/rust-api)
 - [Rust Example](https://memgraph.com/docs/custom-query-modules/rust/rust-example)
-- [MAGE GitHub - Rust](https://github.com/memgraph/mage/tree/main/rust)
+- [Memgraph GitHub - Rust Modules](https://github.com/memgraph/memgraph/tree/master/mage/rust)
