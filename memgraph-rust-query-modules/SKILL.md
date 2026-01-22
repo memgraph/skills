@@ -4,7 +4,7 @@ description: Develop custom query modules in Rust for Memgraph graph database. U
 compatibility: Requires Memgraph instance. Build with memgraph/mgbuild container with toolchain v7 (Rust 1.80 pre-installed).
 metadata:
   author: memgraph
-  version: "1.0.0"
+  version: "0.0.1"
 ---
 
 # Memgraph Rust Query Modules
