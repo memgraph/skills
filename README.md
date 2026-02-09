@@ -39,6 +39,15 @@ skill-name/
     └── REFERENCE.md      # Detailed API reference and examples
 ```
 
+## Validation
+
+Skills are validated against the [Agent Skills specification](https://agentskills.io/specification#validation) using [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref):
+
+```bash
+uv sync
+uv run skills-ref validate <skill-directory>
+```
+
 ## Resources
 
 - [Agent Skills Specification](https://agentskills.io/specification)
