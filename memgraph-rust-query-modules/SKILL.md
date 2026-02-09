@@ -1,7 +1,7 @@
 ---
 name: memgraph-rust-query-modules
 description: Develop custom query modules in Rust for Memgraph graph database. Use when user asks to create Rust procedures, implement graph algorithms in Rust, build high-performance query modules, or work with the rsmgp-sys Rust API. Covers module structure, compilation with Cargo, graph traversal, vertex/edge operations, and deployment to Memgraph.
-compatibility: Requires Memgraph instance. Build with memgraph/mgbuild container with toolchain v7 (Rust 1.80 pre-installed).
+compatibility: "Requires Memgraph instance. Build with memgraph/mgbuild container with toolchain v7 (Rust 1.80 pre-installed)."
 metadata:
   author: memgraph
   version: "0.0.1"

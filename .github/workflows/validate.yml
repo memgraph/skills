@@ -1,0 +1,30 @@
+name: Validate Skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Validate skills
+        run: |
+          for skill in */SKILL.md; do
+            skill_dir=$(dirname "$skill")
+            echo "Validating $skill_dir..."
+            uv run skills-ref validate "$skill_dir"
+          done
