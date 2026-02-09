@@ -1,7 +1,7 @@
 ---
 name: memgraph-cpp-query-modules
 description: Develop custom query modules in C++ for Memgraph graph database. Use when creating high-performance graph algorithms, procedures (ProcedureType::Read/Write), or functions using the mgp.hpp C++ API. Covers compilation, memory management, graph traversal, and module deployment.
-compatibility: Requires Memgraph instance. Quick dev: Clang, CMake Production: memgraph/mgbuild container with toolchain v7. C++20 required.
+compatibility: "Requires Memgraph instance. Quick dev: Clang, CMake Production: memgraph/mgbuild container with toolchain v7. C++20 required."
 metadata:
   version: "0.0.1"
   author: memgraph

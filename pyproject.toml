@@ -1,0 +1,10 @@
+[project]
+name = "memgraph-skills"
+version = "0.1.0"
+description = "Memgraph Agent Skills"
+requires-python = ">=3.11"
+
+[tool.uv]
+dev-dependencies = [
+    "skills-ref @ git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref",
+]
