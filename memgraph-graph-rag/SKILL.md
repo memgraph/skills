@@ -1,12 +1,10 @@
 ---
 name: memgraph-graph-rag
 description: Language-agnostic blueprint for building GraphRAG systems with Memgraph and agent tooling. Covers end-to-end architecture, schema design, ingestion, hybrid retrieval, tool contracts, and evaluation. Use when designing GraphRAG platforms that must work across multiple programming languages.
-license: Apache-2.0
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
 metadata:
+  version: "0.0.1"
   author: memgraph
-  version: "0.1.0"
-  repository: https://github.com/memgraph/skills
 ---
 
 # Memgraph GraphRAG for Agent Systems (Language-Agnostic)
@@ -197,12 +195,3 @@ Use the Memgraph AI Toolkit for faster setup:
 - `langchain-memgraph` for agent tooling
 
 Treat these as implementation options, not requirements.
-
-## Deliverable Checklist
-
-- [ ] Graph schema documented and versioned
-- [ ] Ingestion pipeline with idempotency
-- [ ] Vector index created and verified
-- [ ] Retrieval tool contract implemented
-- [ ] Evaluation harness with sample queries
-- [ ] Monitoring dashboards for latency and errors
