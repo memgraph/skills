@@ -36,7 +36,7 @@ Here's how you can do both steps in Memgraph:
 
 ```cypher
 -- Step 1: Create the vector index for your embeddings
-CREATE VECTOR INDEX vs_index ON :Chunk(embedding) WITH CONFIG {"dimension": 384, "capacity": 10000};
+CREATE VECTOR INDEX vs_index ON :Chunk(embedding) WITH CONFIG {"dimension": <embedding_dimension>, "capacity": <expected_node_count>};
 
 -- Step 2: Compute sentence embeddings for all Chunk nodes
 MATCH (c:Chunk)
