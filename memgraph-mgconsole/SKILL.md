@@ -98,17 +98,17 @@ Use flags to configure connection and output:
 - `--host` or `-host`: Memgraph host (default `127.0.0.1`)
 - `--port` or `-port`: Memgraph port (default `7687`)
 - `--username` / `--password`: Credentials (empty by default)
-- `--output_format`: `tabular` (default), `csv`, or `cypherl`
+- `--output_format`: `tabular` (default), `csv`, or `cypherl` (`cypherl` only works with `DUMP DATABASE`)
 - `--fit_to_screen`: Fit output to terminal width
 - `--history`: Directory for history (default `~/.memgraph`)
 - `--no_history`: Disable history persistence
 - `--term_colors`: Enable terminal colors
 - `--use_ssl`: Enable SSL
-- `--verbose_execution_info`: Show cost, parsing, planning, execution times
+- `--verbose_execution_info`: Show cost, parsing, planning, execution times (interactive mode only)
 
 ## Query Execution Time Details
 
-Enable verbose execution info to get a breakdown:
+Enable verbose execution info to get a breakdown (interactive mode only):
 
 ```bash
 mgconsole --verbose_execution_info
@@ -119,6 +119,8 @@ This adds:
 - PARSING time
 - PLANNING time
 - PLAN EXECUTION time
+
+Note: These details are only displayed in interactive mode, not when piping queries via stdin.
 
 ## Reference: Full Flag List
 
@@ -132,7 +134,7 @@ This adds:
 
 ### Output
 
-- `-output_format` (string): `tabular` (default), `csv`, or `cypherl`.
+- `-output_format` (string): `tabular` (default), `csv`, or `cypherl`. Note: `cypherl` only works with `DUMP DATABASE`.
 - `-fit_to_screen` (bool): Fit output width to terminal width. Default `false`.
 - `-term_colors` (bool): Enable terminal colors. Default `false`.
 
@@ -151,9 +153,15 @@ This adds:
 - `-csv_doublequote` (bool): Use double-quoting for quotes inside fields. Default `true`.
 - `-csv_escapechar` (string): Escape character when `-csv_doublequote` is `false`.
 
+### Import Mode
+
+- `-import_mode` (string): `serial` (default), `batched-parallel`, or `parser`. Controls how piped queries are executed.
+- `-batch_size` (int): Batch size for `batched-parallel` mode. Default `1000`.
+- `-workers_number` (int): Thread count for `batched-parallel` mode. Default `32`.
+
 ### Help and Flags
 
-- `-help` or `-helpfull`: Show all flags.
+- `-help` or `-helpful`: Show all flags.
 - `-helpshort`: Show main flags only.
 - `-version`: Show version and build info.
 - `-flagfile`: Load flags from a file.
