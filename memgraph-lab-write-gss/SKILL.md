@@ -6,11 +6,11 @@ description: >-
   colors, add labels, set images, configure graph layouts, or write any GSS /
   Graph Style Script code for Memgraph Lab.
 compatibility: Memgraph Lab required.
-integrations:
-  - memgraph-lab>=3.11
 metadata:
   version: "0.0.1"
   author: memgraph
+  integrations:
+    - memgraph-lab>=3.11
 ---
 
 # Writing Graph Style Script (GSS)

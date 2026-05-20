@@ -8,11 +8,11 @@ description: >-
   shortest paths, detect communities, compute centrality, generate embeddings,
   or call any MAGE procedure.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
-integrations:
-  - memgraph-lab>=3.11
 metadata:
   version: "0.0.1"
   author: memgraph
+  integrations:
+    - memgraph-lab>=3.11
 ---
 
 # Running MAGE Graph Algorithms

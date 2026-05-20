@@ -7,11 +7,11 @@ description: >-
   import CSV/Parquet into a graph, build a knowledge graph, or optimize a
   Memgraph data model for performance and memory.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
-integrations:
-  - memgraph-lab>=3.11
 metadata:
   version: "0.0.1"
   author: memgraph
+  integrations:
+    - memgraph-lab>=3.11
 ---
 
 # Graph Data Modeling for Memgraph

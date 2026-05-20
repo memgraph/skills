@@ -7,11 +7,11 @@ description: >-
   user asks to write, fix, or optimize a Cypher query for Memgraph, or asks
   about Cypher syntax differences between Memgraph and Neo4j.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
-integrations:
-  - memgraph-lab>=3.11
 metadata:
   version: "0.0.1"
   author: memgraph
+  integrations:
+    - memgraph-lab>=3.11
 ---
 
 # Writing Cypher for Memgraph

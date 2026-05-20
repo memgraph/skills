@@ -7,11 +7,11 @@ description: >-
   transaction isolation, storage modes, snapshots, WAL, or performance tuning via
   schema-level DDL.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
-integrations:
-  - memgraph-lab>=3.11
 metadata:
   version: "0.0.1"
   author: memgraph
+  integrations:
+    - memgraph-lab>=3.11
 ---
 
 # Managing Indexes & Schema in Memgraph
