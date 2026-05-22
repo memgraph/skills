@@ -318,7 +318,7 @@ modifying GSS to catch syntax errors before applying the style in Memgraph Lab.
 
 ## Preview
 
-If the `preview-gss` tool is available, run it after validation to see how
+If the `evaluate-gss` tool is available, run it after validation to see how
 styles resolve against actual graph data. Pass custom nodes and relationships
 to the tool and inspect the computed style properties (color, size, label, etc.)
 for each node and edge. This catches logic errors that syntax validation
