@@ -4,16 +4,15 @@
   "version": "1.0.0",
   "description": "Memgraph skills integrated into Memgraph Lab",
   "author": {
-    "name": "memgraph"
+    "name": "Memgraph"
   },
-  "license": "MIT",
   "keywords": ["memgraph", "graph-database", "cypher", "memgraph-lab"],
   "skills": [
-    "./memgraph-indexes-and-database-administration",
-    "./memgraph-lab-write-gss",
-    "./memgraph-model-graph-data",
-    "./memgraph-python-query-modules",
-    "./memgraph-run-mage-algorithms",
-    "./memgraph-cypher-syntax"
+    "./skills/memgraph-indexes-and-constraints",
+    "./skills/memgraph-lab-write-gss",
+    "./skills/memgraph-model-graph-data",
+    "./skills/memgraph-python-query-modules",
+    "./skills/memgraph-run-mage-algorithms",
+    "./skills/memgraph-cypher-syntax"
   ]
 }
