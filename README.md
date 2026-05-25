@@ -1,37 +1,60 @@
-# Memgraph Agent Skills
+# Memgraph Skills
 
-A collection of [Agent Skills](https://agentskills.io) for working with [Memgraph](https://memgraph.com) graph database.
-
-## What are Agent Skills?
-
-Agent Skills are portable instruction sets that enhance AI coding agents with specialized knowledge. They follow the [Agent Skills specification](https://agentskills.io/specification) and can be used with compatible AI tools like Claude Code, Cursor, and others.
-
-## Available Skills
-
-| Skill | Description |
-|-------|-------------|
-| [memgraph-python-query-modules](memgraph-python-query-modules/) | Develop custom query modules in Python for Memgraph using the mgp API |
-| [memgraph-cpp-query-modules](memgraph-cpp-query-modules/) | Develop custom query modules in C++ for Memgraph using the mgp.hpp API |
-| [memgraph-rust-query-modules](memgraph-rust-query-modules/) | Develop custom query modules in Rust for Memgraph using rsmgp-sys |
-| [memgraph-graph-rag](memgraph-graph-rag/) | Language-agnostic blueprint for GraphRAG with Memgraph and agent tooling |
+A collection of Agent Skills for working with [Memgraph](https://memgraph.com) graph database, covering Cypher, data modeling, indexes, algorithms, query modules, visualization, and GraphRAG.
 
 ## Usage
 
-### With Claude Code
+### With Cursor
 
-Add skills to your project by cloning this repository or copying individual skill directories:
+Clone the repo and symlink skills into one of the locations Cursor scans.
+
+**Personal** (available across all your projects):
 
 ```bash
-# Clone the entire skills repository
-git clone https://github.com/memgraph/skills.git .skills
-
-# Or copy a specific skill
-cp -r skills/memgraph-python-query-modules .skills/
+git clone https://github.com/memgraph/skills.git ~/.memgraph-skills
+ln -s ~/.memgraph-skills/skills/* ~/.cursor/skills-cursor/
 ```
 
-### Skill Structure
+**Per-project** (available only in that project):
 
-Each skill follows the Agent Skills specification:
+```bash
+git clone https://github.com/memgraph/skills.git ~/.memgraph-skills
+cd /path/to/your/project
+ln -s ~/.memgraph-skills/skills .cursor/skills
+```
+
+### With Claude Code
+
+Clone the repo and symlink skills into one of the locations Claude Code scans.
+
+```bash
+git clone https://github.com/memgraph/skills.git ~/.memgraph-skills
+cd /path/to/your/project
+ln -s ~/.memgraph-skills/skills .claude/skills
+```
+
+## Skills
+
+Skills are contextual and auto-loaded based on your conversation. When a request matches a skill's triggers, the agent loads and applies the relevant skill.
+
+| Skill | Useful for |
+|-------|-----------|
+| memgraph-brand-ui | Generating UIs, dashboards, diagrams, and visual artifacts in the Memgraph brand style |
+| memgraph-cpp-query-modules | Building custom query modules in C++ using the mgp.hpp API |
+| memgraph-cypher-syntax | Writing, fixing, and optimizing Cypher queries for Memgraph, including BFS/DFS/WSP lambdas, text and vector search |
+| memgraph-database-configuration | Configuring triggers, transactions, isolation levels, storage modes, snapshots, WAL, and memory |
+| memgraph-graph-rag | Building GraphRAG systems with Memgraph: schema design, ingestion, hybrid retrieval, and agent tool contracts |
+| memgraph-indexes-and-constraints | Creating and managing indexes, constraints, enums, and ANALYZE GRAPH |
+| memgraph-lab-write-gss | Writing Graph Style Script (GSS) for graph visualization in Memgraph Lab |
+| memgraph-mgconsole-cli | Using the mgconsole CLI to connect, run queries, and configure output |
+| memgraph-model-graph-data | Designing graph data models using Labeled Property Graph principles |
+| memgraph-python-query-modules | Building custom query modules in Python using the mgp API |
+| memgraph-run-mage-algorithms | Running MAGE graph algorithms: PageRank, community detection, centrality, embeddings, and 70+ modules |
+| memgraph-rust-query-modules | Building custom query modules in Rust using the rsmgp-sys API |
+
+## Skill Structure
+
+Each skill follows the [Agent Skills specification](https://agentskills.io/specification):
 
 ```
 skill-name/
@@ -42,16 +65,14 @@ skill-name/
 
 ## Validation
 
-Skills are validated against the [Agent Skills specification](https://agentskills.io/specification#validation) using [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref):
+Skills are validated against the [Agent Skills specification](https://agentskills.io/specification#validation):
 
 ```bash
 uv sync
-uv run skills-ref validate <skill-directory>
+uv run skills-ref validate skills/<skill-directory>
 ```
 
 ## Resources
 
 - [Agent Skills Specification](https://agentskills.io/specification)
 - [Memgraph Documentation](https://memgraph.com/docs)
-- [Memgraph Python API](https://memgraph.com/docs/custom-query-modules/python/python-api)
-

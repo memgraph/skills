@@ -23,7 +23,7 @@ jobs:
 
       - name: Validate skills
         run: |
-          for skill in */SKILL.md; do
+          for skill in skills/*/SKILL.md; do
             skill_dir=$(dirname "$skill")
             echo "Validating $skill_dir..."
             uv run skills-ref validate "$skill_dir"

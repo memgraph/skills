@@ -1,0 +1,9 @@
+{
+  "name": "memgraph",
+  "version": "1.0.0",
+  "description": "Skills for the Memgraph graph database: Cypher, data modeling, indexes, algorithms, query modules, and GraphRAG",
+  "author": {
+    "name": "Memgraph"
+  },
+  "keywords": ["memgraph", "graph-database", "cypher", "graph-algorithms", "query-modules"]
+}

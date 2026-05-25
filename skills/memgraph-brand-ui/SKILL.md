@@ -9,7 +9,7 @@ metadata:
 
 # Memgraph Brand Skill
 
-You are designing for **Memgraph** — an in-memory graph database. The product surface is workbench-dense, neutral-first, technical. Engineers, not consumers.
+You are designing for **Memgraph** - an in-memory graph database. The product surface is workbench-dense, neutral-first, technical. Engineers, not consumers.
 
 ## When to Use
 
@@ -33,26 +33,26 @@ If a choice fights either rule, it's wrong.
 
 ---
 
-## Tokens (use these literally — do not invent variants)
+## Tokens (use these literally - do not invent variants)
 
 ### Color
 
 ```
 --brand-black:   #231F20   /* primary text, strong borders, dark surfaces */
---brand-orange:  #FB6E00   /* accent only — primary buttons, active states, links */
+--brand-orange:  #FB6E00   /* accent only - primary buttons, active states, links */
 --orange-tint:   #FFF4EB   /* soft orange badge bg */
 
 --gray-1:   #646265        /* secondary text */
 --gray-2:   #857F87        /* muted text */
 --gray-3:   #BAB8BB        /* placeholder, disabled */
 --gray-4:   #E6E6E6        /* hairline borders, dividers */
---gray-5:   #F9F9F9        /* canvas/zebra/hover bg — NEVER on cards */
+--gray-5:   #F9F9F9        /* canvas/zebra/hover bg - NEVER on cards */
 --white:    #FFFFFF        /* default surface, including all cards */
 
 --success:  #19AF66
 --error:    #DC2223
 --warning:  #FFC500        /* brand yellow, used semantically */
---purple:   #720096        /* marketing accent only — not in product chrome */
+--purple:   #720096        /* marketing accent only - not in product chrome */
 ```
 
 **Color usage:**
@@ -62,7 +62,7 @@ If a choice fights either rule, it's wrong.
 - Orange budget: ~10% of pixels. Primary CTA, active nav indicator, focus ring, the wordmark. That's it.
 - Yellow / red / purple appear **only semantically** (warning / error / marketing-illustration accent). Not as decoration.
 
-### The Brand Gradient — Handle With Care
+### The Brand Gradient - Handle With Care
 
 A `#FFC500 → #DC2223 → #720096` gradient exists in the brand kit. It is **never a background fill on a UI surface**. Acceptable uses, max one per page:
 - A thin 2–4px decorative bar at the top of a marketing hero
@@ -73,11 +73,11 @@ If you find yourself painting a card, button, header, or section bg with the gra
 
 ### Type
 
-- **UI everything: `Inter Tight`.** Headings, body, buttons, labels, nav, tables — all Inter Tight.
+- **UI everything: `Inter Tight`.** Headings, body, buttons, labels, nav, tables - all Inter Tight.
 - **Code only: `Ubuntu Mono`.** Cypher queries, code blocks, inline code, monospace numbers in dense tables.
 - Do not introduce Roboto, Encode Sans, system-ui, Inter, or anything else.
 
-Weight scale (use these — do not freestyle):
+Weight scale (use these - do not freestyle):
 ```
 Body / paragraph:  400
 UI labels, nav:    500
@@ -94,21 +94,21 @@ H4:          20 / 28
 H5 / strong: 16 / 20
 Body:        16 / 24
 Small:       13 / 20    (default for dense UI: chips, tags, table cells)
-Micro:       11 / 12    (eyebrow labels, table column heads — uppercase, +0.06em tracking)
+Micro:       11 / 12    (eyebrow labels, table column heads - uppercase, +0.06em tracking)
 Code:        13 / 20    Ubuntu Mono
 ```
 
 Letter-spacing: `-0.01em` on display headings, `+0.04em` on uppercase button labels and eyebrows, default elsewhere.
 
-### Spacing — Strict 4px Grid
+### Spacing - Strict 4px Grid
 
 `0, 4, 8, 12, 16, 24, 32, 40, 48, 64, 80`. Nothing in between. Component padding is usually 8/12/16. Card padding 16/24. Section gaps 40/64.
 
-### Radii — Strict 2–8px
+### Radii - Strict 2–8px
 
 ```
 2px   tiny tags, swatches, micro-badges
-4px   default — buttons, inputs, cards, dropdowns, modals
+4px   default - buttons, inputs, cards, dropdowns, modals
 8px   large containers, marketing cards, hero tiles
 999px ONLY avatars, status dots, loading spinners
 ```
@@ -118,7 +118,7 @@ Never 12, 16, 24. Never `border-radius: 9999px` on buttons or chips.
 
 ```
 --shadow-card:    0 2px 10px 0 rgba(0,0,0,0.10);   /* card lift */
---shadow-button:  2px 2px 8px 0 rgba(0,0,0,0.24);  /* primary button — note: asymmetric */
+--shadow-button:  2px 2px 8px 0 rgba(0,0,0,0.24);  /* primary button - note: asymmetric */
 --shadow-elev:    0 0 4px 0 rgba(0,0,0,0.25);      /* outlined button */
 --shadow-drop:    0 4px 12px 0 rgba(35,31,32,0.16);/* popovers, dropdowns */
 --shadow-focus:   0 0 0 3px rgba(251,110,0,0.24);  /* keyboard focus */
@@ -146,11 +146,11 @@ No inner shadows. No glow. Stack at most one shadow per element.
 <button style="background:transparent;color:#231F20;border:0;
   border-radius:4px;padding:8px 16px;font:600 16px/20px 'Inter Tight'">Cancel</button>
 ```
-Hover: primary darkens to `#E36300`, secondary fills to `#F9F9F9`. Press: subtle scale `0.98` or shadow flatten — never color shrink.
+Hover: primary darkens to `#E36300`, secondary fills to `#F9F9F9`. Press: subtle scale `0.98` or shadow flatten - never color shrink.
 
 ### Cards
 
-White background. **Either** a 1px `#E6E6E6` border **or** the card shadow — rarely both. 4px radius. 16/24 inner padding.
+White background. **Either** a 1px `#E6E6E6` border **or** the card shadow - rarely both. 4px radius. 16/24 inner padding.
 
 ```html
 <div style="background:#fff;border:1px solid #E6E6E6;border-radius:4px;
@@ -181,7 +181,7 @@ White background. **Either** a 1px `#E6E6E6` border **or** the card shadow — r
 - **App shell:** dark sidenav (`#231F20`, 196px wide) + top status bar (40–64px) + main canvas. Active nav item: 3px left orange bar + slightly lighter row bg.
 - **Status bars:** sticky, full-bleed, dense. Connection pill, then stat cluster (Edges · Indexes · Triggers · Memory), then help/notifications, then disconnect button.
 - **Tables:** `#F9F9F9` zebra at most. Hairline `#E6E6E6` rows. Numeric columns in Ubuntu Mono.
-- **Marketing hero:** big Inter Tight heading (48–80px, 700–800), short subhead in `#646265`, one primary orange CTA, one ghost link. White or `#F9F9F9` background. The gradient (if any) is a 4px top-of-page rule or a small mark — not the bg.
+- **Marketing hero:** big Inter Tight heading (48–80px, 700–800), short subhead in `#646265`, one primary orange CTA, one ghost link. White or `#F9F9F9` background. The gradient (if any) is a 4px top-of-page rule or a small mark - not the bg.
 
 ---
 
@@ -221,7 +221,7 @@ Always begin with these tokens loaded. Inter Tight from Google Fonts is acceptab
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Memgraph — …</title>
+<title>Memgraph - …</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -260,9 +260,9 @@ Always begin with these tokens loaded. Inter Tight from Google Fonts is acceptab
 
 ---
 
-## Process — How to Use This Skill
+## Process - How to Use This Skill
 
-1. **Confirm the surface.** Ask: is this product chrome (Lab-style admin), an internal dashboard, a diagram, or marketing? Each pulls different presets — product chrome = densest, marketing = biggest type, allow one decorative gradient mark, diagrams = token colors only.
+1. **Confirm the surface.** Ask: is this product chrome (Lab-style admin), an internal dashboard, a diagram, or marketing? Each pulls different presets - product chrome = densest, marketing = biggest type, allow one decorative gradient mark, diagrams = token colors only.
 2. **Sketch in tokens.** Reach for the variables above before writing any rule. If a value isn't in the token list, you don't need it.
 3. **Audit the orange.** Count orange surfaces on screen. More than one prominent orange element per viewport? Cut.
 4. **Audit the radii.** Anything outside {2, 4, 8, 999} gets normalized.
