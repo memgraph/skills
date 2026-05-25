@@ -23,15 +23,15 @@ Complete list of available algorithm modules organized by category.
 
 | Module | Lang | Key procedure | YIELD |
 |--------|------|---------------|-------|
-| `algo` | C++ | Various traversal utilities | — |
-| `path` | C++ | Path navigation/analysis | — |
+| `algo` | C++ | Various traversal utilities | - |
+| `path` | C++ | Path navigation/analysis | - |
 | `cycles` | C++ | `cycles.get()` | `cycles` |
 | `bridges` | C++ | `bridges.get()` | `bridges` |
 | `biconnected_components` | C++ | `biconnected_components.get()` | `bcc_id`, `node_from`, `node_to` |
 | `bipartite_matching` | C++ | `bipartite_matching.max()` | `maximum_matching` |
 | `max_flow` | Python | `max_flow.get_flow(source, sink, cap_property?)` | `max_flow` |
 | `tsp` | Python | `tsp.solve(...)` | `sources`, `destinations` |
-| `vrp` | Python | Vehicle routing | — |
+| `vrp` | Python | Vehicle routing | - |
 | `set_cover` | Python | `set_cover.cp_solve(...)` | `total_cost`, `element_id` |
 | `distance_calculator` | C++ | `distance_calculator.single(start, end)` | `distance` |
 
@@ -40,13 +40,13 @@ Complete list of available algorithm modules organized by category.
 | Module | Lang | Key procedure | YIELD |
 |--------|------|---------------|-------|
 | `node2vec` | Python | `node2vec.get_embeddings(is_directed, p, q, num_walks, walk_length, vector_size, ...)` | `nodes`, `embeddings` |
-| `node2vec` | Python | `node2vec.set_embeddings(...)` — writes `embedding` property | `nodes`, `embeddings` |
+| `node2vec` | Python | `node2vec.set_embeddings(...)` - writes `embedding` property | `nodes`, `embeddings` |
 | `gnn` | Python | `gnn.pyg_export(node_props?, edge_props?, label_prop?)` | `json_data` |
-| `gnn_link_prediction` | Python | GNN link prediction pipeline | — |
-| `gnn_node_classification` | Python | GNN node classification pipeline | — |
-| `tgn` | Python | Temporal Graph Networks — `set_params()`, `update()`, `train_and_eval()`, `predict_link_score()` | — |
+| `gnn_link_prediction` | Python | GNN link prediction pipeline | - |
+| `gnn_node_classification` | Python | GNN node classification pipeline | - |
+| `tgn` | Python | Temporal Graph Networks - `set_params()`, `update()`, `train_and_eval()`, `predict_link_score()` | - |
 | `embeddings` | Python | `embeddings.node_sentence(input_nodes?, config?)` | `node`, `embedding` |
-| `knn` | Python | K-nearest neighbors | — |
+| `knn` | Python | K-nearest neighbors | - |
 | `kmeans_clustering` | Python | `kmeans_clustering.get(n_clusters, ...)` | `node`, `cluster_id` |
 | `graph_coloring` | Python | `graph_coloring.color_graph(...)` | `node`, `color` |
 | `node_similarity` | C++ | `node_similarity.jaccard(node1, node2)` | `similarity` |
@@ -92,16 +92,16 @@ Complete list of available algorithm modules organized by category.
 
 | Module | Lang | Description |
 |--------|------|-------------|
-| `llm` | Python | `llm.complete(text, config?)` — LiteLLM completions. Config: `model`, `api_base`, `system_prompt` |
-| `llm_util` | Python | **Deprecated** — `llm_util.schema()`. Use `SHOW SCHEMA INFO` instead |
+| `llm` | Python | `llm.complete(text, config?)` - LiteLLM completions. Config: `model`, `api_base`, `system_prompt` |
+| `llm_util` | Python | **Deprecated** - `llm_util.schema()`. Use `SHOW SCHEMA INFO` instead |
 | `embeddings` | Python | Sentence embeddings via SentenceTransformer or LiteLLM |
 
 ## Data import/export
 
 | Module | Lang | Description |
 |--------|------|-------------|
-| `export_util` | Python | `export_util.json(path)` — graph to JSON |
-| `import_util` | Python | `import_util.json(path)` — JSON to graph |
+| `export_util` | Python | `export_util.json(path)` - graph to JSON |
+| `import_util` | Python | `import_util.json(path)` - JSON to graph |
 | `json_util` | Python | `json_util.load_from_path(path)`, `json_util.load_from_url(url)` |
 | `xml_module` | Python | XML loading/parsing |
 | `migrate` | Python | MySQL, SQL Server, Oracle access |

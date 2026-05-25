@@ -11,14 +11,12 @@ compatibility: Any language with a Bolt-compatible driver. Memgraph instance req
 metadata:
   version: "0.0.1"
   author: memgraph
-  integrations:
-    - memgraph-lab>=3.11
 ---
 
 # Running MAGE Graph Algorithms
 
 MAGE is Memgraph's graph algorithm library. Algorithms are exposed as **query
-modules** — each module has one or more **procedures** (via `CALL`) or
+modules** - each module has one or more **procedures** (via `CALL`) or
 **functions** (via `RETURN`).
 
 ## Installation
@@ -149,12 +147,12 @@ MATCH p=(a)-[*KSHORTEST|3]->(b) RETURN p;
 MATCH p=(a)-[*BFS (r, n | n.active = true AND r.weight < 10)]->(b) RETURN p;
 ```
 
-3-arg `(r, n, p | predicate)` — p is the path so far:
+3-arg `(r, n, p | predicate)` - p is the path so far:
 ```cypher
 MATCH p=(a)-[* (r, n, p | type(last(relationships(p))) != "BLOCKED")]->(b) RETURN p;
 ```
 
-4-arg WSP/ASP filter `(r, n, p, w | predicate)` — w is accumulated weight:
+4-arg WSP/ASP filter `(r, n, p, w | predicate)` - w is accumulated weight:
 ```cypher
 MATCH p=(a)-[*WSHORTEST (r, n | r.w) total (r, n, p, w | w < 1000)]->(b) RETURN p, total;
 ```

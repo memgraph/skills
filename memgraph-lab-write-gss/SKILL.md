@@ -9,8 +9,6 @@ compatibility: Memgraph Lab required.
 metadata:
   version: "0.0.1"
   author: memgraph
-  integrations:
-    - memgraph-lab>=3.11
 ---
 
 # Writing Graph Style Script (GSS)
@@ -322,7 +320,7 @@ If the `evaluate-gss` tool is available, run it after validation to see how
 styles resolve against actual graph data. Pass custom nodes and relationships
 to the tool and inspect the computed style properties (color, size, label, etc.)
 for each node and edge. This catches logic errors that syntax validation
-cannot — such as a `Property` call on a missing key, overlapping predicates
+cannot - such as a `Property` call on a missing key, overlapping predicates
 where the wrong rule wins, or a `Format` expression producing unexpected text.
 
 ## Additional resources

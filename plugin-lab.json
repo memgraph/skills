@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "memgraph-lab",
+  "version": "1.0.0",
+  "description": "Memgraph skills integrated into Memgraph Lab",
+  "author": {
+    "name": "memgraph"
+  },
+  "license": "MIT",
+  "keywords": ["memgraph", "graph-database", "cypher", "memgraph-lab"],
+  "skills": [
+    "./memgraph-indexes-and-database-administration",
+    "./memgraph-lab-write-gss",
+    "./memgraph-model-graph-data",
+    "./memgraph-python-query-modules",
+    "./memgraph-run-mage-algorithms",
+    "./memgraph-cypher-syntax"
+  ]
+}

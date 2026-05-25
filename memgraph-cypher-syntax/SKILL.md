@@ -1,5 +1,5 @@
 ---
-name: memgraph-write-cypher
+name: memgraph-cypher-syntax
 description: >-
   Write Cypher queries for Memgraph, including Memgraph-specific extensions like
   deep path traversals (BFS, DFS, WSP, ASP, KSP with filter/weight lambdas),
@@ -10,8 +10,6 @@ compatibility: Any language with a Bolt-compatible driver. Memgraph instance req
 metadata:
   version: "0.0.1"
   author: memgraph
-  integrations:
-    - memgraph-lab>=3.11
 ---
 
 # Writing Cypher for Memgraph

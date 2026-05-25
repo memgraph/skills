@@ -10,8 +10,6 @@ compatibility: Any language with a Bolt-compatible driver. Memgraph instance req
 metadata:
   version: "0.0.1"
   author: memgraph
-  integrations:
-    - memgraph-lab>=3.11
 ---
 
 # Graph Data Modeling for Memgraph
@@ -23,10 +21,10 @@ both carry properties (key-value pairs), and nodes can have multiple labels.
 
 ### Four components
 
-1. **Nodes** — entities with zero or more labels
-2. **Relationships** — directed edges with exactly one type (immutable after creation)
-3. **Properties** — key-value pairs on nodes and/or relationships
-4. **Labels** — classify nodes; enable indexed lookups
+1. **Nodes** - entities with zero or more labels
+2. **Relationships** - directed edges with exactly one type (immutable after creation)
+3. **Properties** - key-value pairs on nodes and/or relationships
+4. **Labels** - classify nodes; enable indexed lookups
 
 ```cypher
 (:Person:Student {name: "Alice", age: 20})-[:STUDIES {grade: "A"}]->(:Subject {name: "Math"})
@@ -34,7 +32,7 @@ both carry properties (key-value pairs), and nodes can have multiple labels.
 
 ### Key properties of LPG
 
-- Flexible, dynamic schema — add labels/properties anytime without migrations
+- Flexible, dynamic schema - add labels/properties anytime without migrations
 - Relationships are first-class (not inferred via JOINs)
 - Optimized for multi-hop traversals
 - In-memory storage means property types directly affect RAM
@@ -45,7 +43,7 @@ both carry properties (key-value pairs), and nodes can have multiple labels.
 
 ### Step 1: Define requirements
 
-Write down what the database is for — use case drives the model. Ask:
+Write down what the database is for - use case drives the model. Ask:
 - What entities exist?
 - How do entities relate to each other?
 - What questions will the graph answer?
@@ -71,7 +69,7 @@ If a query is slow or awkward, revisit the model.
 
 ---
 
-## Property vs relationship — decision framework
+## Property vs relationship - decision framework
 
 ### Use a property when
 
@@ -88,7 +86,7 @@ If a query is slow or awkward, revisit the model.
 - The data connects entities and can be shared across nodes
 - You frequently query "which other nodes share this value?"
 
-Anti-pattern — categories as array property:
+Anti-pattern - categories as array property:
 
 ```cypher
 (:Product {name: "Milk", categories: ["Dairy", "Organic"]})
@@ -96,7 +94,7 @@ Anti-pattern — categories as array property:
 
 This forces scanning every node's array to find shared categories.
 
-Pattern — categories as nodes:
+Pattern - categories as nodes:
 
 ```cypher
 (:Product {name: "Milk"})-[:BELONGS_TO]->(:Category {name: "Dairy"})
@@ -113,7 +111,7 @@ RETURN other.name;
 ### Supernode warning
 
 When a shared-value node accumulates too many relationships (e.g., a `Country`
-node connected to millions of `Person` nodes), it becomes a **supernode** —
+node connected to millions of `Person` nodes), it becomes a **supernode** -
 traversals through it are expensive. Strategies:
 - Keep high-cardinality shared data as properties when traversal isn't needed
 - Partition supernodes (e.g., `Country` + `Region` hierarchy)
@@ -145,7 +143,7 @@ itself is "readable as sentences."
 
 ### Evolution example
 
-Weak model — skills stored as property arrays:
+Weak model - skills stored as property arrays:
 
 ```cypher
 MATCH (p:Person)-[:WORKS_ON]->(t:Task)
@@ -155,7 +153,7 @@ RETURN *;
 
 Knowledge is in the query, not the graph.
 
-Strong model — skills as nodes with semantic relationships:
+Strong model - skills as nodes with semantic relationships:
 
 ```cypher
 (:Person)-[:HAS]->(:Skill)
@@ -218,14 +216,14 @@ RAM ≈ nodes × 204B + edges × 154B + properties + indexes
 
 - Create indexes BEFORE large imports on MATCH/MERGE key properties
 - Label-property indexes are NOT auto-created (unless flag enabled)
-- Uniqueness constraints do NOT create indexes — add them separately
+- Uniqueness constraints do NOT create indexes - add them separately
 - Run `ANALYZE GRAPH` after data load
 
 ### Storage modes
 
 | Mode | Best for |
 |------|----------|
-| `IN_MEMORY_TRANSACTIONAL` | Default — ACID, concurrent reads/writes |
+| `IN_MEMORY_TRANSACTIONAL` | Default - ACID, concurrent reads/writes |
 | `IN_MEMORY_ANALYTICAL` | Bulk import (up to 6x faster), analytics workloads |
 
 Switch for bulk loading:
@@ -265,7 +263,7 @@ CREATE (:Person {
 });
 ```
 
-CSV values are always strings — convert with `toInteger()`, `toFloat()`,
+CSV values are always strings - convert with `toInteger()`, `toFloat()`,
 `date()`, `toBoolean()`.
 
 ### 4. Create relationships

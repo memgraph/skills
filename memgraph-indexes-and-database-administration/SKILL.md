@@ -10,8 +10,6 @@ compatibility: Any language with a Bolt-compatible driver. Memgraph instance req
 metadata:
   version: "0.0.1"
   author: memgraph
-  integrations:
-    - memgraph-lab>=3.11
 ---
 
 # Managing Indexes & Schema in Memgraph
@@ -35,7 +33,7 @@ Adding an index speeds reads but slows writes and uses extra memory.
 | Point | `CREATE POINT INDEX ON :L(prop);` | `DROP POINT INDEX ON :L(prop);` |
 | Text | `CREATE TEXT INDEX name ON :L;` | `DROP TEXT INDEX name;` |
 | Vector | `CREATE VECTOR INDEX name ON :L(prop) WITH CONFIG {...};` | `DROP VECTOR INDEX name;` |
-| Drop all | — | `DROP ALL INDEXES;` |
+| Drop all | - | `DROP ALL INDEXES;` |
 
 Show: `SHOW INDEX INFO;` or `SHOW INDEXES;`
 
@@ -45,7 +43,7 @@ Show: `SHOW INDEX INFO;` or `SHOW INDEXES;`
 CREATE INDEX ON :Person(age);
 ```
 
-Creating a label-property index does NOT create a label index — create both if
+Creating a label-property index does NOT create a label index - create both if
 needed. Best performance on high-cardinality properties (unique IDs, names).
 Avoid on booleans or low-cardinality fields.
 
@@ -85,7 +83,7 @@ Dropping without config removes both ASC and DESC variants.
 CREATE INDEX ON :Project(delivery.status.due_date);
 ```
 
-Must use `WHERE` clause to query — inline map matching won't use the index:
+Must use `WHERE` clause to query - inline map matching won't use the index:
 
 ```cypher
 -- Wrong (compares entire map):
@@ -169,7 +167,7 @@ DROP CONSTRAINT ON (n:Employee) ASSERT n.email IS UNIQUE;
 ```
 
 Multi-property: same name OR same address is allowed; same name AND address is
-forbidden. Uniqueness constraints do NOT create indexes — add them separately.
+forbidden. Uniqueness constraints do NOT create indexes - add them separately.
 
 ### Data type constraint
 
@@ -354,7 +352,7 @@ SHOW STORAGE INFO;
 | `Enum` | Must be defined first |
 | `Point` | 2D/3D, Cartesian or WGS-84 |
 
-Lists and Maps cannot be mutated element-by-element — replace the whole value.
+Lists and Maps cannot be mutated element-by-element - replace the whole value.
 
 ### Temporal arithmetic
 
@@ -383,9 +381,9 @@ SHOW STORAGE INFO;
 
 | Mode | ACID | WAL | Periodic snapshots | Use case |
 |------|------|-----|-------------------|----------|
-| `IN_MEMORY_TRANSACTIONAL` | Full | Yes | Yes | Default — concurrent reads/writes |
+| `IN_MEMORY_TRANSACTIONAL` | Full | Yes | Yes | Default - concurrent reads/writes |
 | `IN_MEMORY_ANALYTICAL` | No | No | Manual only | Bulk import, analytics (up to 6x faster) |
-| `ON_DISK_TRANSACTIONAL` | Snapshot isolation | RocksDB | — | Experimental, larger-than-memory |
+| `ON_DISK_TRANSACTIONAL` | Snapshot isolation | RocksDB | - | Experimental, larger-than-memory |
 
 Cannot switch in-memory to on-disk with data present. Cannot switch with active transactions.
 
@@ -447,7 +445,7 @@ For 50+ indexes add ~20% overhead.
 
 ## Storage access
 
-Index/constraint/enum DDL requires exclusive (unique) access — briefly blocks
+Index/constraint/enum DDL requires exclusive (unique) access - briefly blocks
 other queries during execution. Normal Cypher queries use shared access.
 
 Timeout for write access during index creation:
@@ -461,7 +459,7 @@ SET DATABASE SETTING 'storage.access_timeout_sec' TO '30';
 ## Key rules summary
 
 1. Indexes are not auto-created unless flags are enabled (IN_MEMORY_TRANSACTIONAL only)
-2. Uniqueness constraints do NOT create indexes — add them separately
+2. Uniqueness constraints do NOT create indexes - add them separately
 3. Label-property index does NOT imply a label index
 4. Composite index follows the leftmost prefix rule
 5. Nested map indexes require WHERE clause, not inline map matching
