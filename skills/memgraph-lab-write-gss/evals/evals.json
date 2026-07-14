@@ -1,0 +1,42 @@
+{
+  "skill_name": "memgraph-lab-write-gss",
+  "evals": [
+    {
+      "id": "node-style-by-label",
+      "name": "node-style-by-label",
+      "prompt": "In Memgraph Lab, I want every Person node to show up as a large blue dot. Write the Graph Style Script that does this.",
+      "expected_output": "A Graph Style Script (GSS) snippet using the @NodeStyle directive with a HasLabel(node, \"Person\") predicate, whose braced block sets color to a blue value and size to a larger number (and optionally shape: \"dot\"). It should be GSS, not CSS and not a Cypher query.",
+      "assertions": [
+        "The answer uses the GSS @NodeStyle directive (not a CSS selector, and not a Cypher/SET query).",
+        "The nodes are restricted to the Person label with a HasLabel(node, \"Person\") predicate written in the directive header before the braced block.",
+        "Inside the braced block it sets the color property to a blue value and the size property to a larger number.",
+        "If it sets a shape, it uses the shape property with the \"dot\" value (e.g. shape: \"dot\")."
+      ]
+    },
+    {
+      "id": "edge-style-by-type",
+      "name": "edge-style-by-type",
+      "prompt": "How do I style FRIENDS_WITH relationships in Memgraph Lab so they are drawn thicker and labeled with their relationship type?",
+      "expected_output": "A GSS snippet using the @EdgeStyle directive that binds the edge variable, selects the relationship type via Equals(Type(edge), \"FRIENDS_WITH\"), sets the edge width to a larger number, and sets label: Type(edge) so the label shows the relationship type dynamically.",
+      "assertions": [
+        "The answer uses the GSS @EdgeStyle directive (the edge-styling directive, not @NodeStyle).",
+        "It targets the relationship type using the Type(edge) function inside a predicate such as Equals(Type(edge), \"FRIENDS_WITH\").",
+        "It sets the edge width property to a larger number to make the relationship thicker.",
+        "It sets the label using the Type(edge) function (e.g. label: Type(edge)) rather than a hardcoded string literal."
+      ]
+    },
+    {
+      "id": "conditional-color-by-property",
+      "name": "conditional-color-by-property",
+      "prompt": "In Memgraph Lab, color Person nodes coral only when their age property is greater than 30. Give me the GSS for that.",
+      "expected_output": "A GSS snippet using @NodeStyle whose predicate combines conditions with And(...), reads the age property via Property(node, \"age\"), compares it with the Greater(...) function against 30, checks the label with HasLabel(node, \"Person\"), and sets color: coral in the block.",
+      "assertions": [
+        "The answer uses the @NodeStyle directive with a compound predicate combined via the And(...) function.",
+        "It reads the age property using the Property(node, \"age\") function form, NOT dot notation like node.age.",
+        "It performs the numeric comparison with the Greater(...) function (e.g. Greater(Property(node, \"age\"), 30)), not a bare > operator.",
+        "It restricts to Person nodes with HasLabel(node, \"Person\").",
+        "The braced block sets the color property to coral."
+      ]
+    }
+  ]
+}

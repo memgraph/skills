@@ -1,0 +1,40 @@
+{
+  "skill_name": "memgraph-indexes-and-constraints",
+  "evals": [
+    {
+      "id": 1,
+      "name": "unique-constraint-needs-separate-index",
+      "prompt": "In Memgraph I need to guarantee that every :User node has a unique email. What's the Cypher for that, and is a uniqueness constraint enough to also make lookups by email fast?",
+      "expected_output": "A uniqueness constraint created with Memgraph's ASSERT ... IS UNIQUE syntax, e.g. CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE; plus a clear statement that a uniqueness constraint does NOT automatically create an index, so a separate label-property index (CREATE INDEX ON :User(email);) is still needed for fast email lookups.",
+      "assertions": [
+        "The answer creates the uniqueness constraint using Memgraph's syntax CREATE CONSTRAINT ON (n:User) ASSERT n.email IS UNIQUE.",
+        "The answer explicitly states that a uniqueness constraint does NOT automatically create an index.",
+        "The answer recommends creating a separate label-property index for fast lookups, e.g. CREATE INDEX ON :User(email);.",
+        "The constraint uses the ASSERT keyword and does NOT use Neo4j's REQUIRE / FOR ... REQUIRE constraint syntax."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-index-requires-storage-flag",
+      "prompt": "How do I create an index on the :KNOWS relationship type in Memgraph to speed up edge lookups? Is there anything I need to enable first?",
+      "expected_output": "An edge index created with CREATE EDGE INDEX ON :KNOWS;, together with a warning that edge indexes require the storage configuration flag --storage-properties-on-edges=true to be enabled.",
+      "assertions": [
+        "The answer creates the edge index using CREATE EDGE INDEX ON :KNOWS; (the CREATE EDGE INDEX form, not a plain CREATE INDEX on a node label).",
+        "The answer states that edge indexes require the configuration flag --storage-properties-on-edges=true.",
+        "The answer makes clear this flag must be enabled for the edge index to work."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "composite-index-prefix-and-analyze-graph",
+      "prompt": "I frequently filter :Order nodes by both status and customer_id together in Memgraph. How should I index this for the best performance, and is there anything I should run after loading a large dataset?",
+      "expected_output": "A composite index on both properties, e.g. CREATE INDEX ON :Order(customer_id, status);, an explanation of the leftmost-prefix rule (filtering on the first property or a leftmost prefix uses the index, but skipping the first property prevents its use), a recommendation to place the highest-cardinality property first, and a recommendation to run ANALYZE GRAPH; after loading data.",
+      "assertions": [
+        "The answer creates a composite index over both properties using the CREATE INDEX ON :Order(prop1, prop2) form.",
+        "The answer explains the leftmost-prefix rule: filtering on the first property (or a leftmost prefix) uses the index, but skipping the first property prevents the index from being used.",
+        "The answer recommends placing the highest-cardinality property first in the composite index.",
+        "The answer recommends running ANALYZE GRAPH; after loading the dataset to optimize query planning."
+      ]
+    }
+  ]
+}

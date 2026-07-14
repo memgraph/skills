@@ -1,0 +1,132 @@
+name: Skill Evals
+
+# Skill-quality evals, separate from validate.yml (which only checks structure).
+# Runs each skill's test cases WITH and WITHOUT the skill and reports the delta.
+# REPORT-ONLY by default: it never fails the build unless you opt in to a gate
+# (see the commented --fail-under line in the "Run evals" step).
+
+on:
+  workflow_dispatch:
+    inputs:
+      skill:
+        description: "Skill directory name to evaluate, or 'all'"
+        required: false
+        default: "all"
+      iteration:
+        description: "Iteration number (blank = auto-increment)"
+        required: false
+        default: ""
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "evals/**"
+
+concurrency:
+  group: evals-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so PR diffs resolve
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Determine targets
+        id: targets
+        run: |
+          set -euo pipefail
+          run_all() { echo "mode=all" >> "$GITHUB_OUTPUT"; }
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            skill="${{ github.event.inputs.skill }}"
+            if [ -z "$skill" ] || [ "$skill" = "all" ]; then
+              run_all
+            else
+              echo "mode=list" >> "$GITHUB_OUTPUT"
+              echo "$skill" > changed_skills.txt
+            fi
+            exit 0
+          fi
+
+          # pull_request: evaluate only the changed skills when feasible.
+          base="${{ github.event.pull_request.base.sha }}"
+          changed=$(git diff --name-only "$base"...HEAD || true)
+
+          # If the harness itself changed, its behaviour affects every skill.
+          if echo "$changed" | grep -q '^evals/'; then
+            run_all
+            exit 0
+          fi
+
+          echo "$changed" \
+            | grep -oE '^skills/[^/]+/' \
+            | sed 's#^skills/##; s#/##' \
+            | sort -u > candidate_skills.txt || true
+
+          : > changed_skills.txt
+          while read -r s; do
+            [ -n "$s" ] || continue
+            if [ -f "skills/$s/evals/evals.json" ]; then
+              echo "$s" >> changed_skills.txt
+            fi
+          done < candidate_skills.txt
+
+          if [ -s changed_skills.txt ]; then
+            echo "mode=list" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run evals
+        if: steps.targets.outputs.mode != 'none'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          ITER_ARG=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.iteration }}" ]; then
+            ITER_ARG="--iteration ${{ github.event.inputs.iteration }}"
+          fi
+
+          # REPORT-ONLY by default. To make evals gate the build, uncomment GATE
+          # (fails if a skill's WITH-skill mean pass_rate drops below the threshold):
+          GATE=""
+          # GATE="--fail-under 0.6"
+
+          if [ "${{ steps.targets.outputs.mode }}" = "all" ]; then
+            uv run python -m evals.run_evals --all $ITER_ARG $GATE \
+              --github-step-summary "$GITHUB_STEP_SUMMARY"
+          else
+            while read -r s; do
+              [ -n "$s" ] || continue
+              echo "::group::evals for $s"
+              uv run python -m evals.run_evals --skill "$s" $ITER_ARG $GATE \
+                --github-step-summary "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+            done < changed_skills.txt
+          fi
+
+      - name: No evals to run
+        if: steps.targets.outputs.mode == 'none'
+        run: echo "No changed skills have an evals/evals.json — nothing to evaluate." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload eval workspace
+        if: always() && steps.targets.outputs.mode != 'none'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-workspace
+          path: skills/*-workspace/**
+          if-no-files-found: ignore

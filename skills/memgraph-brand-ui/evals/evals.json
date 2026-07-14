@@ -1,0 +1,43 @@
+{
+  "skill_name": "memgraph-brand-ui",
+  "evals": [
+    {
+      "id": "lab-style-dashboard",
+      "name": "lab-style-dashboard",
+      "prompt": "I'm building an internal admin dashboard for a Memgraph deployment. It has a query editor panel on the left and a results table on the right. Can you generate the HTML and CSS for it so it looks like it belongs in the Memgraph product family?",
+      "expected_output": "A dashboard that follows the Memgraph brand system: neutral white/gray surfaces where orange is only a small accent on the primary action, Inter Tight for UI text and Ubuntu Mono for the query/code area, 4px-grid spacing, border radii limited to {2px, 4px, 8px, 999px}, and no gradient backgrounds or glow/drop-shadow-on-everything.",
+      "assertions": [
+        "The UI text uses the Inter Tight font family, and the query editor / code / monospace area uses Ubuntu Mono; no other typefaces are introduced.",
+        "Panel, card, and canvas surface backgrounds are white (#FFFFFF) or canvas gray (#F9F9F9), and orange #FB6E00 is not used as a large surface fill or as a border/divider color.",
+        "Orange #FB6E00 appears only as a sparing accent (e.g. primary button or active state) while neutral whites and grays dominate the layout — orange is not the dominant color.",
+        "Every border-radius value is one of 2px, 4px, 8px, or 999px — there are no 12px, 16px, or 24px radii.",
+        "There are no gradient backgrounds and no glow/inner-shadow effects, and shadows are not applied to every element."
+      ]
+    },
+    {
+      "id": "cta-button-voice",
+      "name": "cta-button-voice",
+      "prompt": "Write the markup and copy for the primary call-to-action button plus its heading on a Memgraph feature splash page that nudges users to try running a graph query.",
+      "expected_output": "A CTA in Memgraph's voice: an imperative, second-person, sentence-case button label such as \"Run query\" with no exclamation marks, emoji, or marketing hype; the primary button filled with orange #FB6E00; heading text in brand black #231F20 using Inter Tight; and a small allowed corner radius rather than a decorative rounded pill.",
+      "assertions": [
+        "The button label is imperative and second-person in sentence case (e.g. \"Run query\" or \"Connect to instance\"), not Title Case or ALL CAPS.",
+        "The copy contains no exclamation marks, no emoji, and no marketing or hype language.",
+        "The primary button is filled with orange #FB6E00.",
+        "Body/heading text uses brand black #231F20 (not pure #000000) and the Inter Tight font.",
+        "The button is not styled as a decorative rounded pill; its corners use a small allowed radius (2px, 4px, or 8px)."
+      ]
+    },
+    {
+      "id": "mermaid-architecture-diagram",
+      "name": "mermaid-architecture-diagram",
+      "prompt": "Give me a Mermaid diagram of a Memgraph streaming architecture (a Kafka source feeding into Memgraph, then out to a downstream app), styled to match Memgraph's brand.",
+      "expected_output": "A Mermaid diagram themed with the Memgraph palette: brand black #231F20 text, neutral gray/white node fills, orange #FB6E00 only as a sparing accent on at most one focal node, semantic colors used only when meaningful, no emoji in labels, and restrained (no glow, no icon soup, no invented colors or gradients).",
+      "assertions": [
+        "Node and edge label text uses brand black #231F20 (not pure black), and no label contains emoji.",
+        "Node fills are neutral (white or a palette gray such as #F9F9F9), with orange #FB6E00 used only as a sparing accent on at most one focal node rather than as the fill for most nodes.",
+        "Every color used comes from the defined brand tokens (brand black #231F20, orange #FB6E00, the grays, or the semantic colors success #19AF66 / error #DC2223 / warning #FFC500) — no invented/arbitrary colors and no gradient fills.",
+        "The diagram avoids decorative excess consistent with \"restraint over decoration\" — no glow or drop-shadow effects on nodes and no icon soup."
+      ]
+    }
+  ]
+}
