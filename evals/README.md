@@ -133,14 +133,23 @@ skill doesn't document.
 
 `.github/workflows/evals.yml` runs on `workflow_dispatch` (pick a skill or
 `all`, optional iteration) and on `pull_request`s touching `skills/**` or
-`evals/**`. On a PR it evaluates only the changed skills that have an
-`evals.json` (falling back to all skills when the harness itself changed). It
-uploads the workspace as an artifact and appends the delta table to the job
-summary. It needs the `ANTHROPIC_API_KEY` repository secret.
+`evals/**`. It has two tiers so a PR is always checkable:
 
-It is **report-only by default** — evals never fail the build. To turn it into a
-quality gate, uncomment the `GATE="--fail-under 0.6"` line in the workflow's
-"Run evals" step.
+1. **Schema validation (always runs).** A deterministic, key-free step
+   validates every `skills/*/evals/evals.json` against the harness schema using
+   the dependency-free validator in `schema.py` (system Python — no `uv sync`,
+   no SDK, no secret). It **hard-fails** the build if any file is malformed.
+2. **Model eval run (only when the secret is present).** If the
+   `ANTHROPIC_API_KEY` repository secret is configured, it installs the harness
+   and runs the with/without-skill evals — on a PR, only the changed skills that
+   have an `evals.json` (falling back to all skills when the harness itself
+   changed) — uploading the workspace artifact and appending the delta table to
+   the job summary. If the secret is **not** configured, this tier is skipped
+   and the job stays green after tier 1, recording a notice in the job summary.
+
+The model run is **report-only by default** — it never fails the build. To turn
+it into a quality gate, uncomment the `GATE="--fail-under 0.6"` line in the
+workflow's "Run evals" step. (Schema validation always gates, regardless.)
 
 ## The iterate loop
 
