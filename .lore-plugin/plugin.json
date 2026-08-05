@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "memgraph-lore",
+  "version": "1.0.0",
+  "description": "Memgraph skills integrated into Memgraph Lore",
+  "author": {
+    "name": "Memgraph"
+  },
+  "keywords": ["memgraph", "graph-database", "cypher", "memgraph-lore"],
+  "skills": [
+    "./skills/memgraph-indexes-and-constraints",
+    "./skills/memgraph-model-graph-data",
+    "./skills/memgraph-run-mage-algorithms",
+    "./skills/memgraph-cypher-syntax"
+  ]
+}
