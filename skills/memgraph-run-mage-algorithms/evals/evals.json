@@ -1,0 +1,41 @@
+{
+  "skill_name": "memgraph-run-mage-algorithms",
+  "evals": [
+    {
+      "id": 1,
+      "name": "pagerank-top-nodes",
+      "prompt": "I'm using Memgraph. How do I compute PageRank over my graph and return the 10 most influential nodes? Give me the Cypher query.",
+      "expected_output": "A query that runs Memgraph's MAGE PageRank procedure with CALL pagerank.get() YIELD node, rank, then orders by rank descending and limits to 10, e.g. CALL pagerank.get() YIELD node, rank RETURN node, rank ORDER BY rank DESC LIMIT 10; It should use MAGE's CALL ... YIELD procedure form, not Neo4j GDS syntax.",
+      "assertions": [
+        "The answer invokes the MAGE procedure pagerank.get() using the CALL ... YIELD syntax.",
+        "The query YIELDs the columns node and rank from pagerank.get().",
+        "The query orders the results by rank in descending order (ORDER BY rank DESC) and limits to 10 to get the most influential nodes.",
+        "The answer does NOT use Neo4j GDS syntax such as CALL gds.pageRank.stream(...)."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "community-detection-louvain",
+      "prompt": "In Memgraph, I want to detect communities in my social graph and label each node with the community it belongs to. What's the right way to do this?",
+      "expected_output": "A query using MAGE's community_detection.get() (Louvain) procedure with CALL community_detection.get() YIELD node, community_id, returning each node with its community_id. It may also mention leiden_community_detection as the Leiden alternative. Uses the MAGE CALL ... YIELD procedure form.",
+      "assertions": [
+        "The answer uses the MAGE procedure community_detection.get() via CALL ... YIELD to detect communities (this is the Louvain-based procedure).",
+        "The query YIELDs the columns node and community_id from community_detection.get().",
+        "The answer uses MAGE's CALL ... YIELD procedure syntax rather than Neo4j GDS syntax like gds.louvain.stream(...).",
+        "If an alternative is offered, it names the MAGE procedure leiden_community_detection (Leiden), not an invented name."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "pagerank-on-projected-subgraph",
+      "prompt": "In Memgraph I only want to run PageRank on part of my graph — just the :User nodes connected by :FOLLOWS relationships, ignoring everything else. How do I scope a MAGE algorithm to that subgraph?",
+      "expected_output": "A query that builds a subgraph with project() from a MATCH on the :User/:FOLLOWS pattern and passes that projected Graph as the first argument to pagerank.get(), e.g. MATCH p=(:User)-[:FOLLOWS]->(:User) WITH project(p) AS subgraph CALL pagerank.get(subgraph) YIELD node, rank RETURN node, rank; It relies on the fact that a MAGE procedure's first parameter can accept a Graph from project().",
+      "assertions": [
+        "The answer uses project() to construct a subgraph Graph object from a matched pattern.",
+        "The projected Graph is passed as the first argument to the MAGE procedure (e.g. pagerank.get(subgraph)) to scope the algorithm to that subgraph.",
+        "The matched pattern restricts the subgraph to :User nodes connected by :FOLLOWS relationships.",
+        "The procedure call still uses CALL ... YIELD and yields node and rank."
+      ]
+    }
+  ]
+}
