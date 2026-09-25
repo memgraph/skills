@@ -1,0 +1,42 @@
+{
+  "skill_name": "memgraph-rust-query-modules",
+  "evals": [
+    {
+      "id": 1,
+      "name": "hello-world-read-procedure",
+      "prompt": "I want to write a custom query module for Memgraph in Rust. Give me a complete minimal module with a read procedure called `hello_world` that takes a `name` string argument and returns a `message` string like \"Hello, <name>!\". Include the Cargo.toml too.",
+      "expected_output": "A complete Rust query module using the rsmgp-sys API: an init_module! block that registers the procedure with memgraph.add_read_procedure(...), passing the procedure name, an input define_type!(\"name\", Type::String), and an output define_type!(\"message\", Type::String); a define_procedure! block implementing the logic (getting args via memgraph.args(), a result record via memgraph.result_record(), and inserting the string result); and a close_module! block. The Cargo.toml declares crate-type = [\"cdylib\"] and depends on rsmgp-sys and c_str_macro.",
+      "assertions": [
+        "The module registers the procedure inside init_module! by calling memgraph.add_read_procedure(...) (not add_write_procedure or a Neo4j/APOC-style API).",
+        "The procedure body is defined with the define_procedure! macro, and parameter/return types are declared with define_type! using Type::String for both the input and the output.",
+        "The code obtains arguments via memgraph.args() and produces output via memgraph.result_record(), inserting the message string into the record (e.g. result.insert_string).",
+        "The module includes a close_module! block for cleanup.",
+        "The Cargo.toml sets crate-type = [\"cdylib\"] and lists rsmgp-sys (path dependency) and c_str_macro as dependencies."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "build-and-load-module",
+      "prompt": "I've finished writing my Rust query module for Memgraph. How do I compile it and get it loaded into a running Memgraph instance?",
+      "expected_output": "Instructions to build the crate inside the memgraph/mgbuild container using toolchain v7 (e.g. docker image memgraph/mgbuild:v7_ubuntu-24.04), activating the toolchain with `source /opt/toolchain-v7/activate` before running `cargo build --release`. This produces a shared library (lib<name>.so) that must be copied into /usr/lib/memgraph/query_modules/ on the Memgraph instance, after which the module is loaded with the Cypher call `CALL mg.load_all();`.",
+      "assertions": [
+        "The answer builds the module inside the memgraph/mgbuild container with toolchain v7 (e.g. references image memgraph/mgbuild:v7_ubuntu-24.04), rather than building against an arbitrary local Rust toolchain.",
+        "The build activates the toolchain via `source /opt/toolchain-v7/activate` and compiles with `cargo build --release`.",
+        "The resulting shared object (.so) is placed into the /usr/lib/memgraph/query_modules/ directory of the Memgraph instance.",
+        "The module is (re)loaded into Memgraph with the Cypher call `CALL mg.load_all();`."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "expand-outgoing-neighbors",
+      "prompt": "Write a Memgraph Rust query module procedure that accepts a start vertex and returns each of its outgoing neighbors as a separate result row.",
+      "expected_output": "A Rust procedure that pattern-matches the vertex argument (e.g. Value::Vertex from args.value_at(0)), iterates the vertex's outgoing edges with vertex.out_edges(), resolves each neighbor with edge.to_vertex(), and emits one record per neighbor by calling memgraph.result_record() inside the loop and inserting the neighbor with result.insert_vertex(...).",
+      "assertions": [
+        "The procedure iterates outgoing edges using vertex.out_edges() and obtains each neighbor via edge.to_vertex() (not by scanning all vertices or using in_edges for the outgoing direction).",
+        "The vertex argument is retrieved with args.value_at(0) and matched as Value::Vertex.",
+        "A separate result record is produced per neighbor by calling memgraph.result_record() inside the edge loop (the multiple-records pattern), not a single record outside the loop.",
+        "Each neighbor vertex is written to its record with result.insert_vertex(...)."
+      ]
+    }
+  ]
+}
