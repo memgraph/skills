@@ -1,0 +1,17 @@
+{
+  "name": "memgraph",
+  "owner": {
+    "name": "Memgraph"
+  },
+  "metadata": {
+    "description": "Agent skills for building with the Memgraph graph database."
+  },
+  "plugins": [
+    {
+      "name": "memgraph",
+      "source": "./",
+      "description": "Skills for the Memgraph graph database: Cypher, data modeling, indexes, algorithms, query modules, and GraphRAG",
+      "version": "1.0.0"
+    }
+  ]
+}

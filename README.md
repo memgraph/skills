@@ -2,7 +2,24 @@
 
 A collection of Agent Skills for working with [Memgraph](https://memgraph.com) graph database, covering Cypher, data modeling, indexes, algorithms, query modules, visualization, and GraphRAG.
 
-## Usage
+## Install
+
+### With Claude Code
+
+```
+/plugin marketplace add memgraph/skills
+/plugin install memgraph@memgraph
+```
+
+### With any agent (Cursor, Codex, Claude Code, and others)
+
+```bash
+npx skills add memgraph/skills
+```
+
+Add `--skill <name>` to install a single skill, or `--list` to see them all.
+
+## Manual install
 
 ### With Cursor
 
@@ -23,7 +40,7 @@ cd /path/to/your/project
 ln -s ~/.memgraph-skills/skills .cursor/skills
 ```
 
-### With Claude Code
+### With Claude Code (manual)
 
 Clone the repo and symlink skills into one of the locations Claude Code scans.
 
