@@ -11,6 +11,13 @@ A collection of Agent Skills for working with [Memgraph](https://memgraph.com) g
 /plugin install memgraph@memgraph
 ```
 
+### With Codex
+
+```bash
+codex plugin marketplace add memgraph/skills
+codex plugin add memgraph@memgraph
+```
+
 ### With any agent (Cursor, Codex, Claude Code, and others)
 
 ```bash
