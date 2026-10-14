@@ -27,7 +27,7 @@ incrementally, or is part of a larger pipeline.
 | Source | Route |
 |---|---|
 | CSV file the **server** can read (local disk, `http(s)://`, `ftp://`, `s3://`; gzip/bzip2 ok) | `LOAD CSV` |
-| Parquet file, same locations  as CSV| `LOAD PARQUET` |
+| Parquet file, same locations as CSV | `LOAD PARQUET` |
 | JSON Lines file, same locations as CSV | `LOAD JSONL` |
 | JSON array or arbitrary JSON | `json_util.load_from_path()` / `load_from_url()` + `UNWIND` |
 | JSON produced by `export_util.json()` | `import_util.json()` |
@@ -217,6 +217,40 @@ WITH row, convert.from_json_map(row.address) AS addr
 CREATE (:Order {id: toInteger(row.id), city: addr.city});
 ```
 
+## Client-driven batches
+
+When the file is only on the client machine, or rows need code to transform them, send
+parameterised batches of 1,000 to 10,000 rows. One `UNWIND` per batch is far faster than one
+statement per row, and the Bolt driver handles the transaction.
+
+```python
+from neo4j import GraphDatabase
+
+def chunks(seq, size):
+    for i in range(0, len(seq), size):
+        yield seq[i:i + size]
+
+with GraphDatabase.driver("bolt://localhost:7687", auth=("", "")) as driver:
+    with driver.session() as session:            # index DDL needs an autocommit query
+        session.run("CREATE INDEX ON :Person(id);").consume()
+    for batch in chunks(rows, 5000):            # rows: list of dicts
+        driver.execute_query(
+            "UNWIND $rows AS row "
+            "MERGE (p:Person {id: row.id}) SET p.name = row.name, p.age = row.age",
+            rows=batch,
+        )
+```
+
+`execute_query` runs inside a managed transaction, and Memgraph refuses index and constraint
+changes there ("Index manipulation is not allowed in multicommand transactions"), so schema
+statements go through a plain `session.run`.
+
+For parallel loading use processes, not threads, one driver per process, and never more
+processes than hardware threads. In transactional mode, concurrent writers that touch the same
+node raise `Cannot resolve conflicting transactions`; retry the batch with a short exponential
+backoff plus jitter, inside an explicit transaction rather than autocommit. Supernodes make these
+conflicts frequent; load their relationships from a single process.
+
 ## Relational databases and Neo4j
 
 `cross_database` procedures stream rows from the source into the same query, so there is no
@@ -253,40 +287,6 @@ relationship pattern like `"[:KNOWS]"`. The whole-graph recipe merges nodes on a
 `__MigrationNode__` label keyed by the Neo4j `elementId`, then drops it; it is in REFERENCE.md.
 Neo4j and Memgraph must listen on different Bolt ports on the same host. Indexes and constraints
 are not carried over; recreate them by hand.
-
-## Client-driven batches
-
-When the file is only on the client machine, or rows need code to transform them, send
-parameterised batches of 1,000 to 10,000 rows. One `UNWIND` per batch is far faster than one
-statement per row, and the Bolt driver handles the transaction.
-
-```python
-from neo4j import GraphDatabase
-
-def chunks(seq, size):
-    for i in range(0, len(seq), size):
-        yield seq[i:i + size]
-
-with GraphDatabase.driver("bolt://localhost:7687", auth=("", "")) as driver:
-    with driver.session() as session:            # index DDL needs an autocommit query
-        session.run("CREATE INDEX ON :Person(id);").consume()
-    for batch in chunks(rows, 5000):            # rows: list of dicts
-        driver.execute_query(
-            "UNWIND $rows AS row "
-            "MERGE (p:Person {id: row.id}) SET p.name = row.name, p.age = row.age",
-            rows=batch,
-        )
-```
-
-`execute_query` runs inside a managed transaction, and Memgraph refuses index and constraint
-changes there ("Index manipulation is not allowed in multicommand transactions"), so schema
-statements go through a plain `session.run`.
-
-For parallel loading use processes, not threads, one driver per process, and never more
-processes than hardware threads. In transactional mode, concurrent writers that touch the same
-node raise `Cannot resolve conflicting transactions`; retry the batch with a short exponential
-backoff plus jitter, inside an explicit transaction rather than autocommit. Supernodes make these
-conflicts frequent; load their relationships from a single process.
 
 ## CYPHERL files
 
@@ -333,6 +333,7 @@ Memgraph Lab's CYPHERL import is capped at 1 million nodes and relationships.
 
 ## Additional resources
 
-- [REFERENCE.md](references/REFERENCE.md): `cross_database` signatures and examples per source,
-  the Neo4j whole-graph migration, a parallel client loader with retry.
+- [REFERENCE.md](references/REFERENCE.md): `LOAD CSV` clause details, memory and durability
+  during a big import, a parallel client loader with retry, `cross_database` signatures and
+  examples per source, and the Neo4j whole-graph migration.
 - Memgraph docs: Data migration section, `LOAD CSV` clause, `cross_database` module.

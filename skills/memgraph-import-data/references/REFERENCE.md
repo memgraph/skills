@@ -1,5 +1,110 @@
 # Import reference
 
+## LOAD CSV clause details
+
+```
+LOAD CSV FROM <location> [WITH CONFIG {"aws_region": .., "aws_access_key": .., "aws_secret_key": .., "aws_endpoint_url": ..}]
+  (WITH | NO) HEADER
+  [IGNORE BAD]
+  [DELIMITER <string>]      -- default ","
+  [QUOTE <string>]          -- default "\""
+  [NULLIF <string>]         -- no null conversion by default
+  AS <variable>
+```
+
+- `<location>`: local path on the server, `http://`, `https://`, `ftp://` or `s3://`. Remote files
+  are downloaded to `/tmp` first; `gzip` and `bzip2` are decompressed transparently.
+- At most one `LOAD CSV` per query; it cannot be the only clause.
+- A `MATCH`/`MERGE` before `LOAD CSV` must not produce more than one row; otherwise the query
+  fails with "LOAD CSV can be executed only once, please check if the cardinality of the operator
+  before LOAD CSV is 1". Config map keys in `WITH CONFIG` must be quoted strings.
+- `RETURN row[0], row[1]` needs aliases (`AS a, AS b`); the two expressions otherwise share a name.
+- `file.download_conn_timeout_sec` controls the download timeout; a stuck download can be stopped
+  with `TERMINATE TRANSACTIONS <tx_id>`.
+- Rows from `WITH HEADER` files are maps (`row.name`); from `NO HEADER` files they are lists
+  (`row[0]`).
+- A single file holding both node and relationship rows can be split with
+  `WITH row WHERE row.type = 'PERSON'` in one query and `WITH row WHERE row.type = 'IS_FRIEND'`
+  in another.
+
+## Memory and durability during a big import
+
+- In transactional mode each write creates a `Delta` of about 56 bytes; a 10-million-row
+  transaction holds hundreds of MB of deltas until commit. Batch, or use analytical mode.
+- `SHOW STORAGE INFO;` reports `memory_res`, `peak_memory_res`, vertex and edge counts.
+- Snapshots run every `--storage-snapshot-interval` seconds (default 300) and keep
+  `--storage-snapshot-retention-count` copies (default 3). For very large imports raise the interval
+  so snapshots do not overlap. Analytical mode writes no WAL. Switching back to transactional
+  mode writes a snapshot synchronously before the switch completes; if that snapshot fails the
+  query throws and the database stays in analytical mode.
+- To clear a failed import quickly, delete relationships before nodes in batches:
+  ```cypher
+  MATCH ()-[r]->() WITH r LIMIT 100000 DELETE r RETURN count(r);
+  MATCH (n) WITH n LIMIT 100000 DELETE n RETURN count(n);
+  ```
+  or `DROP GRAPH;` when the whole database should go.
+
+## Parallel client loader with retry
+
+Processes rather than threads (Python's GIL), one driver per process, at most one process per
+hardware thread. Nodes are loaded completely before relationships start.
+
+```python
+import random, time
+from multiprocessing import Pool
+from neo4j import GraphDatabase
+from neo4j.exceptions import TransientError
+
+URI, AUTH = "bolt://localhost:7687", ("", "")
+BATCH = 5000
+
+NODE_Q = "UNWIND $rows AS row CREATE (:Person {id: row.id, name: row.name})"
+REL_Q = """UNWIND $rows AS row
+MATCH (a:Person {id: row.from_id}), (b:Person {id: row.to_id})
+CREATE (a)-[:KNOWS {since: row.since}]->(b)"""
+
+
+def chunks(seq, size):
+    for i in range(0, len(seq), size):
+        yield seq[i:i + size]
+
+
+def run_batch(args):
+    query, rows = args
+    delay = 0.5
+    with GraphDatabase.driver(URI, auth=AUTH) as driver:
+        for attempt in range(8):
+            try:
+                with driver.session() as session:
+                    session.execute_write(lambda tx: tx.run(query, rows=rows).consume())
+                return len(rows)
+            except TransientError as e:          # "Cannot resolve conflicting transactions"
+                if attempt == 7:
+                    raise
+                time.sleep(delay + random.uniform(0, delay / 2))
+                delay *= 1.1
+    return 0
+
+
+if __name__ == "__main__":
+    nodes = load_rows("people.csv")        # list of dicts, typed already
+    rels = load_rows("knows.csv")
+
+    with GraphDatabase.driver(URI, auth=AUTH) as driver, driver.session() as session:
+        # index DDL is refused inside a managed transaction; use an autocommit query
+        session.run("CREATE INDEX ON :Person(id);").consume()
+
+    with Pool(8) as pool:
+        n = sum(pool.map(run_batch, [(NODE_Q, b) for b in chunks(nodes, BATCH)]))
+        r = sum(pool.map(run_batch, [(REL_Q, b) for b in chunks(rels, BATCH)]))
+    print(f"nodes {n}, relationships {r}")
+```
+
+Rules of thumb from the Memgraph docs: start batching above roughly 10 million objects; a
+single-threaded `LOAD CSV` is fine below that. Expect on the order of a million objects per
+second on good hardware. With `IN_MEMORY_ANALYTICAL` there are no conflicts to retry, but do not
+run node and relationship batches at the same time.
+
 ## cross_database procedures
 
 Available in the `memgraph/memgraph-mage` image. Named `migrate.*` before Memgraph 3.11 (the old
@@ -139,108 +244,3 @@ CREATE (a)-[r:KNOWS]->(b) SET r += row.edge_properties;
 Dynamic labels only work from a property access such as `SET n:row.labels`. Binding the list to a
 plain variable first and writing `CREATE (n:labels)` or `SET n:labels`, as the docs example does,
 creates a node whose label is literally `labels`.
-
-## Parallel client loader with retry
-
-Processes rather than threads (Python's GIL), one driver per process, at most one process per
-hardware thread. Nodes are loaded completely before relationships start.
-
-```python
-import random, time
-from multiprocessing import Pool
-from neo4j import GraphDatabase
-from neo4j.exceptions import TransientError
-
-URI, AUTH = "bolt://localhost:7687", ("", "")
-BATCH = 5000
-
-NODE_Q = "UNWIND $rows AS row CREATE (:Person {id: row.id, name: row.name})"
-REL_Q = """UNWIND $rows AS row
-MATCH (a:Person {id: row.from_id}), (b:Person {id: row.to_id})
-CREATE (a)-[:KNOWS {since: row.since}]->(b)"""
-
-
-def chunks(seq, size):
-    for i in range(0, len(seq), size):
-        yield seq[i:i + size]
-
-
-def run_batch(args):
-    query, rows = args
-    delay = 0.5
-    with GraphDatabase.driver(URI, auth=AUTH) as driver:
-        for attempt in range(8):
-            try:
-                with driver.session() as session:
-                    session.execute_write(lambda tx: tx.run(query, rows=rows).consume())
-                return len(rows)
-            except TransientError as e:          # "Cannot resolve conflicting transactions"
-                if attempt == 7:
-                    raise
-                time.sleep(delay + random.uniform(0, delay / 2))
-                delay *= 1.1
-    return 0
-
-
-if __name__ == "__main__":
-    nodes = load_rows("people.csv")        # list of dicts, typed already
-    rels = load_rows("knows.csv")
-
-    with GraphDatabase.driver(URI, auth=AUTH) as driver, driver.session() as session:
-        # index DDL is refused inside a managed transaction; use an autocommit query
-        session.run("CREATE INDEX ON :Person(id);").consume()
-
-    with Pool(8) as pool:
-        n = sum(pool.map(run_batch, [(NODE_Q, b) for b in chunks(nodes, BATCH)]))
-        r = sum(pool.map(run_batch, [(REL_Q, b) for b in chunks(rels, BATCH)]))
-    print(f"nodes {n}, relationships {r}")
-```
-
-Rules of thumb from the Memgraph docs: start batching above roughly 10 million objects; a
-single-threaded `LOAD CSV` is fine below that. Expect on the order of a million objects per
-second on good hardware. With `IN_MEMORY_ANALYTICAL` there are no conflicts to retry, but do not
-run node and relationship batches at the same time.
-
-## LOAD CSV clause details
-
-```
-LOAD CSV FROM <location> [WITH CONFIG {"aws_region": .., "aws_access_key": .., "aws_secret_key": .., "aws_endpoint_url": ..}]
-  (WITH | NO) HEADER
-  [IGNORE BAD]
-  [DELIMITER <string>]      -- default ","
-  [QUOTE <string>]          -- default "\""
-  [NULLIF <string>]         -- no null conversion by default
-  AS <variable>
-```
-
-- `<location>`: local path on the server, `http://`, `https://`, `ftp://` or `s3://`. Remote files
-  are downloaded to `/tmp` first; `gzip` and `bzip2` are decompressed transparently.
-- At most one `LOAD CSV` per query; it cannot be the only clause.
-- A `MATCH`/`MERGE` before `LOAD CSV` must not produce more than one row; otherwise the query
-  fails with "LOAD CSV can be executed only once, please check if the cardinality of the operator
-  before LOAD CSV is 1". Config map keys in `WITH CONFIG` must be quoted strings.
-- `RETURN row[0], row[1]` needs aliases (`AS a, AS b`); the two expressions otherwise share a name.
-- `file.download_conn_timeout_sec` controls the download timeout; a stuck download can be stopped
-  with `TERMINATE TRANSACTIONS <tx_id>`.
-- Rows from `WITH HEADER` files are maps (`row.name`); from `NO HEADER` files they are lists
-  (`row[0]`).
-- A single file holding both node and relationship rows can be split with
-  `WITH row WHERE row.type = 'PERSON'` in one query and `WITH row WHERE row.type = 'IS_FRIEND'`
-  in another.
-
-## Memory and durability during a big import
-
-- In transactional mode each write creates a `Delta` of about 56 bytes; a 10-million-row
-  transaction holds hundreds of MB of deltas until commit. Batch, or use analytical mode.
-- `SHOW STORAGE INFO;` reports `memory_res`, `peak_memory_res`, vertex and edge counts.
-- Snapshots run every `--storage-snapshot-interval` seconds (default 300) and keep
-  `--storage-snapshot-retention-count` copies (default 3). For very large imports raise the interval
-  so snapshots do not overlap. Analytical mode writes no WAL. Switching back to transactional
-  mode writes a snapshot synchronously before the switch completes; if that snapshot fails the
-  query throws and the database stays in analytical mode.
-- To clear a failed import quickly, delete relationships before nodes in batches:
-  ```cypher
-  MATCH ()-[r]->() WITH r LIMIT 100000 DELETE r RETURN count(r);
-  MATCH (n) WITH n LIMIT 100000 DELETE n RETURN count(n);
-  ```
-  or `DROP GRAPH;` when the whole database should go.
