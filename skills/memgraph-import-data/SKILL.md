@@ -16,11 +16,25 @@ metadata:
 
 # Importing data into Memgraph
 
-Prefer a server-side `LOAD` clause (CSV, Parquet, JSONL) when the file can be placed where the
-Memgraph server can read it; it avoids Bolt round trips and is the fastest and simplest route.
-Stream directly from a relational database or Neo4j with `cross_database`. Use a client script
-when the data lives only on the client, needs transformation or validation in code, arrives
-incrementally, or is part of a larger pipeline.
+Work through these questions in order and take the first route that fits:
+
+1. **Is it a `.cypherl` dump?** Pipe it into `mgconsole` (Memgraph Lab for under a million
+   objects). No modelling is needed; the statements already are the model.
+2. **Is it a flat file (CSV, Parquet, JSON Lines), or can the source export one cheaply?**
+   Put the file where the server can read it (local disk, `http(s)://`, `ftp://`, `s3://`,
+   or `docker cp` into the container) and use `LOAD CSV`, `LOAD PARQUET` or `LOAD JSONL`.
+   This is the fastest and simplest route; prefer it even if it means exporting first.
+3. **Is it a JSON array or nested JSON?** `json_util.load_from_path()` / `load_from_url()`
+   with `UNWIND`, or `import_util.json()` for files written by `export_util.json()`.
+4. **Is it in another database (PostgreSQL, MySQL, SQL Server, Oracle, DuckDB, Neo4j,
+   Memgraph) and is `cross_database` available?** It needs the memgraph-mage image and, since
+   3.13, an Enterprise license. Stream it straight into `CREATE`/`MERGE`. Without
+   `cross_database`, export to CSV and go back to step 2.
+5. **Does it arrive from Kafka or Pulsar?** Use the built-in stream consumers with a
+   transformation module; that is a separate topic.
+6. **Otherwise** write a client script that sends parameterised `UNWIND $rows AS row` batches.
+   This covers data that lives only on the client, needs transformation or validation in code,
+   arrives incrementally, or is part of a larger pipeline.
 
 ## Choose a route
 
