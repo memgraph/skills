@@ -1,0 +1,26 @@
+{
+  "skill_name": "memgraph-EXAMPLE-SKILL",
+  "evals": [
+    {
+      "id": 1,
+      "name": "short-descriptive-name",
+      "prompt": "A realistic prompt exactly as a user would type it. Be specific and natural — this is what the model receives verbatim.",
+      "expected_output": "Plain-language description of what a correct, complete answer looks like. This guides the judge; it is NOT shown to the model being tested.",
+      "files": [],
+      "assertions": [
+        "A concrete, independently checkable statement about the output.",
+        "Each assertion is graded PASS/FAIL with no benefit of the doubt — write them so a strict judge can verify each one from the output alone.",
+        "Prefer many small, specific assertions over one broad one."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Another test case. `name` is optional; without it the run directory is 'eval-2'. `files` is optional; paths are relative to this skill's evals/ dir and their contents are appended to the prompt as context.",
+      "expected_output": "What success looks like for case 2.",
+      "assertions": [
+        "First checkable claim.",
+        "Second checkable claim."
+      ]
+    }
+  ]
+}

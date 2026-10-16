@@ -1,0 +1,42 @@
+{
+  "skill_name": "memgraph-python-query-modules",
+  "evals": [
+    {
+      "id": 1,
+      "name": "write-proc-create-node",
+      "prompt": "In Memgraph, I want to write a custom query module in Python that creates a new Person node with a given name and an optional age. Show me the Python code and how I'd call it from Cypher.",
+      "expected_output": "A Python query module using the mgp API. Because it modifies the graph it must use the @mgp.write_proc decorator, take context: mgp.ProcCtx as the first parameter, create the node with context.graph.create_vertex(), set the label via vertex.add_label(\"Person\") and set properties on vertex.properties, using mgp.Nullable[int] for the optional age. It returns an mgp.Record and is invoked from Cypher with CALL module.create_person(...) YIELD ....",
+      "assertions": [
+        "The procedure is decorated with @mgp.write_proc (NOT @mgp.read_proc), because it modifies the graph.",
+        "The procedure's first parameter is the context typed as mgp.ProcCtx.",
+        "The node is created with context.graph.create_vertex() and its label is set with vertex.add_label(\"Person\") (properties assigned via vertex.properties).",
+        "The optional age parameter is typed with mgp.Nullable[int] (e.g. defaulting to None), and the procedure returns an mgp.Record(...).",
+        "The Cypher invocation uses CALL <module>.create_person(...) YIELD ... rather than RETURN."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "udf-function-full-name",
+      "prompt": "How do I create a custom Cypher function (not a procedure) in Memgraph using Python that concatenates a first and last name into a full name, and how do I use it inside a MATCH query?",
+      "expected_output": "A user-defined function using the @mgp.function decorator, whose first parameter is context: mgp.FuncCtx and whose return type is a plain supported type (str), NOT mgp.Record. It is used directly in a Cypher expression with RETURN module.full_name(...) (e.g. RETURN module.full_name(p.first_name, p.last_name) AS name), not called with CALL ... YIELD.",
+      "assertions": [
+        "The function is decorated with @mgp.function (NOT @mgp.read_proc or @mgp.write_proc).",
+        "The function's first parameter is the context typed as mgp.FuncCtx (not mgp.ProcCtx).",
+        "The function returns a plain supported type such as str, and does NOT wrap its result in mgp.Record.",
+        "The Cypher usage calls the function inline within a RETURN expression (e.g. RETURN module.full_name(...)), NOT via CALL ... YIELD."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "deploy-load-module-docker",
+      "prompt": "I've written a Python query module file for Memgraph and my Memgraph is running in a Docker container. How do I deploy the module and make it available for use without restarting Memgraph?",
+      "expected_output": "Instructions to copy the .py file into Memgraph's query modules directory (/usr/lib/memgraph/query_modules/), e.g. via docker cp, then reload without restarting by running CALL mg.load_all(); (through mgconsole / docker exec). A volume mount of the modules directory is a valid alternative, and CALL mg.procedures() can verify the module loaded.",
+      "assertions": [
+        "The module file is placed in Memgraph's query modules directory /usr/lib/memgraph/query_modules/ (e.g. using docker cp), or that directory is volume-mounted.",
+        "The module is (re)loaded at runtime with CALL mg.load_all(); (or CALL mg.load(\"module_name\");), so no restart is needed.",
+        "The load command is executed against the running container, e.g. piped into mgconsole via docker exec.",
+        "The answer does NOT claim a Memgraph restart is required to pick up the new module."
+      ]
+    }
+  ]
+}

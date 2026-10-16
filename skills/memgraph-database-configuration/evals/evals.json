@@ -1,0 +1,44 @@
+{
+  "skill_name": "memgraph-database-configuration",
+  "evals": [
+    {
+      "id": 1,
+      "name": "trigger-on-node-create",
+      "prompt": "In Memgraph, I want to automatically run some Cypher every time a new node is created — for example to write an audit record. How do I set up a trigger for that, and how do I get access to the nodes that were just created?",
+      "expected_output": "A CREATE TRIGGER statement that fires on node CREATE events, uses a commit-phase timing (AFTER COMMIT or BEFORE COMMIT), separates the trigger header from the body with EXECUTE, and reads the just-created nodes via the createdVertices predefined variable. It may also note that triggers persist to disk and default to DEFINER security level.",
+      "assertions": [
+        "The answer uses the CREATE TRIGGER <name> statement to define the trigger.",
+        "The trigger is scoped to a CREATE event (e.g. ON CREATE or ON () CREATE).",
+        "The trigger specifies a commit phase using AFTER COMMIT or BEFORE COMMIT.",
+        "The Cypher body is introduced with the EXECUTE keyword.",
+        "The answer accesses the newly created nodes via the createdVertices predefined variable."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "storage-mode-for-bulk-import",
+      "prompt": "I need to bulk-import several hundred million nodes and relationships into Memgraph as fast as possible. Which storage mode should I use, and what do I lose by using it?",
+      "expected_output": "A recommendation to switch to IN_MEMORY_ANALYTICAL storage mode for the import because it is much faster (about 6x) for bulk loading, together with the tradeoffs: it provides no ACID guarantees, no WAL / no durability, and no transaction isolation guarantees. It should contrast this with the default IN_MEMORY_TRANSACTIONAL mode.",
+      "assertions": [
+        "The answer recommends the IN_MEMORY_ANALYTICAL storage mode for the bulk import.",
+        "The answer states IN_MEMORY_ANALYTICAL is significantly faster for bulk import (roughly 6x).",
+        "The answer warns that IN_MEMORY_ANALYTICAL does not write a WAL and provides no durability / no full ACID guarantees.",
+        "The answer warns that analytical mode lacks transaction isolation guarantees.",
+        "The answer identifies IN_MEMORY_TRANSACTIONAL as the default mode used for concurrent reads/writes."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "durability-snapshots-and-wal",
+      "prompt": "How do I make sure the data in my Memgraph instance survives a restart? I'd like periodic snapshots plus write-ahead logging, and I want to know how to take a snapshot on demand.",
+      "expected_output": "An explanation of Memgraph durability: WAL is enabled by default; take an on-demand snapshot with CREATE SNAPSHOT; schedule periodic snapshots with SET DATABASE SETTING \"storage.snapshot.interval\" (or the --storage-snapshot-interval flag). It should note the key constraint that WAL cannot be used without snapshots, and may mention that older WAL files are deleted after each snapshot.",
+      "assertions": [
+        "The answer states that WAL (write-ahead logging) is enabled by default.",
+        "The answer shows CREATE SNAPSHOT to take a snapshot manually/on demand.",
+        "The answer schedules periodic snapshots via SET DATABASE SETTING \"storage.snapshot.interval\" or the --storage-snapshot-interval flag.",
+        "The answer states that WAL cannot be used without snapshots.",
+        "The answer does NOT claim WAL alone is sufficient for durability without snapshots."
+      ]
+    }
+  ]
+}
