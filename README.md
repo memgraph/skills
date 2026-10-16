@@ -68,6 +68,7 @@ Skills are contextual and auto-loaded based on your conversation. When a request
 | memgraph-cypher-syntax | Writing, fixing, and optimizing Cypher queries for Memgraph, including BFS/DFS/WSP lambdas, text and vector search |
 | memgraph-database-configuration | Configuring triggers, transactions, isolation levels, storage modes, snapshots, WAL, and memory |
 | memgraph-graph-rag | Building GraphRAG systems with Memgraph: schema design, ingestion, hybrid retrieval, and agent tool contracts |
+| memgraph-import-data | Loading and migrating data into Memgraph from CSV, Parquet, JSON, CYPHERL, relational databases and Neo4j; indexes, storage mode, batching and verification |
 | memgraph-indexes-and-constraints | Creating and managing indexes, constraints, enums, and ANALYZE GRAPH |
 | memgraph-lab-write-gss | Writing Graph Style Script (GSS) for graph visualization in Memgraph Lab |
 | memgraph-mgconsole-cli | Using the mgconsole CLI to connect, run queries, and configure output |
