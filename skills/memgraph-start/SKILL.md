@@ -33,30 +33,49 @@ Rules for every step:
 docker info --format '{{.ServerVersion}}'
 ```
 
-If this fails, ask the user to start Docker (Docker Desktop on macOS, the Docker
-service on Linux) and run it again.
+If this fails:
+
+- "Cannot connect to the Docker daemon" or similar: ask the user to start Docker
+  (Docker Desktop on macOS, the Docker service on Linux).
+- "permission denied" on Linux: Docker is running, but the user can't use it
+  without `sudo`. Ask them to add themselves to the `docker` group (then log out
+  and in) or to run the commands with `sudo`.
+
+Then run it again.
 
 ## 2. Choose the ports
 
 The Memgraph MCP server connects to `bolt://localhost:7687` unless
 `MEMGRAPH_URL` is set, so use port `7687` whenever it's free. Check the Bolt
-port (`7687`), the log port (`7444`) and the Lab port (`3000`):
+port (`7687`), the log port (`7444`) and the Lab port (`3000`). This shows the
+container that holds a port, or "in use" for anything else:
 
 ```shell
-for p in 7687 7444 3000; do nc -z localhost $p 2>/dev/null && echo "$p in use" || echo "$p free"; done
+for p in 7687 7444 3000; do
+  c=$(docker ps --filter publish=$p --format '{{.Names}}')
+  if [ -n "$c" ]; then echo "$p used by container $c"
+  elif bash -c "exec 3<>/dev/tcp/127.0.0.1/$p" 2>/dev/null; then echo "$p in use"
+  else echo "$p free"; fi
+done
 ```
 
 - **All free:** use `7687`, `7444` and `3000`.
 - **`7687` in use:** another Memgraph (or another service) is already running.
-  Tell the user, and ask which they want:
-  1. **Use the existing Memgraph on `7687`.** Skip step 4, and don't load a
-     dataset into it unless the user explicitly says that database can be
-     changed.
-  2. **Start a new Memgraph on free ports**, e.g. `7688` and `7445`. Tell the
-     user that the Memgraph MCP server still points at `7687`: to use it with
-     the new Memgraph, they set `MEMGRAPH_URL=bolt://localhost:7688` for the
-     MCP server and start a new agent session. Until then, run queries with
-     `mgconsole` inside the container (see step 5).
+  Tell the user what holds it, and ask which they want:
+  1. **Use the existing Memgraph on `7687`.** Only if it's a Memgraph the user
+     wants to try things on. If the container is `context-graph-memgraph`,
+     that's their AI Memory store: say so and recommend option 2. In this path:
+     skip step 4; don't load a dataset unless the user explicitly says that
+     database can be changed; ask for its container name before running any
+     `docker exec`, or use the Memgraph MCP server instead; and if
+     `SHOW SCHEMA INFO` fails (the server wasn't started with
+     `--schema-info-enabled`), use the Memgraph MCP server's schema tools or
+     `CALL schema.node_type_properties()` instead.
+  2. **Start a new Memgraph on free ports**, e.g. `7688` and `7445` (check them
+     the same way). The Memgraph MCP server still points at `7687`. To point it
+     at the new Memgraph, the user runs `export MEMGRAPH_URL=bolt://localhost:7688`
+     and starts the agent again from that same shell. Until then, run queries
+     with `mgconsole` inside the container (see step 5).
 - **Only `3000` or `7444` in use:** pick the next free port (`3001`, `7445`, …)
   and tell the user.
 
@@ -105,8 +124,12 @@ Wait until Memgraph accepts queries (about 20 seconds; the port opens
 before Memgraph is ready):
 
 ```shell
-until echo 'RETURN 1;' | docker exec -i memgraph mgconsole >/dev/null 2>&1; do sleep 1; done
+for i in $(seq 60); do echo 'RETURN 1;' | docker exec -i memgraph mgconsole >/dev/null 2>&1 && echo ready && break; sleep 2; done
 ```
+
+If it doesn't print `ready` within two minutes, show
+`docker ps -a --filter name=memgraph` and the last lines of
+`docker logs memgraph`, and stop.
 
 While Memgraph starts, the Memgraph MCP server answers "Could not connect …
 ensure the URL is correct". That only means "not ready yet": wait and retry,
@@ -159,8 +182,8 @@ the query into `mgconsole` as above.
 ## 7. Offer a docs question
 
 Ask: "Want to know something about Memgraph, for example how to keep this data
-after a restart or how to connect from Python?" Answer from the Memgraph docs
-MCP server (`search_memgraph_knowledge_sources`) and cite the pages it returns.
+after a restart or how to connect from Python?" Answer with the Memgraph docs
+MCP server's search tool and cite the pages it returns.
 If the docs MCP isn't connected, read the docs as Markdown by adding `.md` to a
 `https://memgraph.com/docs/` URL.
 
@@ -182,9 +205,12 @@ installing.
 ## 9. Wrap up
 
 Summarize in a few lines: what's running and on which ports, which dataset is
-loaded, how to stop everything
-(`docker rm -f memgraph memgraph-lab && docker network rm memgraph-start`), and
-two next steps that fit what the user said they're building.
+loaded, how to stop everything, and two next steps that fit what the user said
+they're building.
+
+To stop everything, give the command with the names this flow actually started
+(by default `docker rm -f memgraph memgraph-lab && docker network rm memgraph-start`).
+Never include a container this flow didn't start.
 
 If the user installed this as a Claude Code or Codex plugin, mention that
 plugin updates arrive only when they update the marketplace or turn on
