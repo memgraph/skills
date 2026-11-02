@@ -47,16 +47,12 @@ Then run it again.
 
 The Memgraph MCP server connects to `bolt://localhost:7687` unless
 `MEMGRAPH_URL` is set, so use port `7687` whenever it's free. Check the Bolt
-port (`7687`), the log port (`7444`) and the Lab port (`3000`). This shows the
-container that holds a port, or "in use" for anything else:
+port (`7687`), the log port (`7444`) and the Lab port (`3000`) with the
+`scripts/check-ports.sh` script in this skill's folder. It prints the container
+that holds a port, or "in use" for anything else:
 
 ```shell
-for p in 7687 7444 3000; do
-  c=$(docker ps --filter publish=$p --format '{{.Names}}')
-  if [ -n "$c" ]; then echo "$p used by container $c"
-  elif bash -c "exec 3<>/dev/tcp/127.0.0.1/$p" 2>/dev/null; then echo "$p in use"
-  else echo "$p free"; fi
-done
+bash <this skill's folder>/scripts/check-ports.sh 7687 7444 3000
 ```
 
 - **All free:** use `7687`, `7444` and `3000`.
@@ -111,25 +107,26 @@ suffix (`memgraph-2`) and use it everywhere below.
 docker network create memgraph-start 2>/dev/null || true
 docker run -d --name memgraph --network memgraph-start \
   -p 7687:7687 -p 7444:7444 \
-  memgraph/memgraph-mage --schema-info-enabled=true
+  memgraph/memgraph-mage:3.14.0 --schema-info-enabled=true
 docker run -d --name memgraph-lab --network memgraph-start -p 3000:3000 \
   -e QUICK_CONNECT_MG_HOST=memgraph -e QUICK_CONNECT_MG_PORT=7687 \
-  memgraph/lab
+  memgraph/lab:3.14.1
 ```
 
+Keep the image tags as written: they're the versions this skill is tested with.
 `QUICK_CONNECT_MG_PORT` is the port inside the network, so it stays `7687` even
 when the published port is different.
 
-Wait until Memgraph accepts queries (about 20 seconds; the port opens
-before Memgraph is ready):
+Wait until Memgraph accepts queries (about 20 seconds; the port opens before
+Memgraph is ready) with the `scripts/wait-ready.sh` script in this skill's
+folder, passing the container name:
 
 ```shell
-for i in $(seq 60); do echo 'RETURN 1;' | docker exec -i memgraph mgconsole >/dev/null 2>&1 && echo ready && break; sleep 2; done
+bash <this skill's folder>/scripts/wait-ready.sh memgraph
 ```
 
-If it doesn't print `ready` within two minutes, show
-`docker ps -a --filter name=memgraph` and the last lines of
-`docker logs memgraph`, and stop.
+It prints `ready after Ns`, or after two minutes the container status and its
+last log lines. In that case, show them to the user and stop.
 
 While Memgraph starts, the Memgraph MCP server answers "Could not connect …
 ensure the URL is correct". That only means "not ready yet": wait and retry,
