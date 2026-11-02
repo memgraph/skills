@@ -36,7 +36,7 @@ With Docker running, ask your agent:
 Get started with Memgraph
 ```
 
-It runs the `memgraph-start` skill: it starts Memgraph and Memgraph Lab in Docker, loads a sample dataset you pick, and runs a first query and a graph algorithm. To call the skill directly, use `/memgraph:memgraph-start` in Claude Code or `$memgraph-start` in Codex. In Codex, start it with `codex -a on-request` so the agent can ask to run Docker outside its sandbox.
+It runs the `memgraph-start` skill: it starts Memgraph and Memgraph Lab in Docker, loads a sample dataset you pick, and runs a first query and a graph algorithm. To call the skill directly, use `/memgraph:memgraph-start` in Claude Code or `$memgraph-start` in Codex. In Codex, start it with `codex -a on-request` so the agent can ask to run Docker outside its sandbox. To be asked less, answer the first `docker` and `curl` prompts with **Yes, and don't ask again for commands that start with …**, or choose **Approve for me** in `/permissions`, where Codex's reviewer approves low-risk commands for you.
 
 ## Manual install
 
