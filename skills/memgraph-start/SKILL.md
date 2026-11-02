@@ -21,7 +21,9 @@ result in one or two lines.
 
 Rules for every step:
 
-- Ask before any command that starts containers or loads data.
+- Ask before any command that starts containers or loads data. If your agent
+  already asks the user to approve each command, that approval is the ask:
+  explain the command in one line and run it, without asking again in chat.
 - Never stop, restart, reuse or change a Memgraph container or database the user
   already has. Only touch the containers you start in this flow.
 - If a step fails, show the error, explain it in one sentence, and stop. Don't
@@ -94,6 +96,10 @@ Use the chosen ports in every command below. The examples use `7687`, `7444`
 and `3000`.
 
 ## 3. Choose a dataset
+
+If you can't show a question form, ask this together with any open question
+from step 2 in one short message with numbered options, and wait for the answer
+before running anything else.
 
 Offer exactly four choices: the three datasets below and "See the other
 datasets" (there are more than 30 others). Some question tools allow only four
