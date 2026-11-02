@@ -37,9 +37,14 @@ If this fails:
 
 - "Cannot connect to the Docker daemon" or similar: ask the user to start Docker
   (Docker Desktop on macOS, the Docker service on Linux).
-- "permission denied" on Linux: Docker is running, but the user can't use it
-  without `sudo`. Ask them to add themselves to the `docker` group (then log out
-  and in) or to run the commands with `sudo`.
+- "permission denied" on the Docker socket while you run in a sandbox (Codex
+  and other agents sandbox commands by default): the sandbox blocks Docker, and
+  the later `curl` download needs network access too. Run this and the later
+  `docker` and `curl` commands outside the sandbox, which needs the user's
+  approval, instead of stopping.
+- "permission denied" on Linux outside a sandbox: Docker is running, but the
+  user can't use it without `sudo`. Ask them to add themselves to the `docker`
+  group (then log out and in) or to run the commands with `sudo`.
 
 Then run it again.
 
