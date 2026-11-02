@@ -3,8 +3,8 @@ name: memgraph-start
 description: >-
   Get a new user from nothing to a working Memgraph in a few minutes: start
   Memgraph with MAGE and Memgraph Lab in Docker, load a sample dataset the user
-  picks, run a first query and a graph algorithm, then offer a docs question and
-  optional AI memory. Use when the user asks to get started with Memgraph, set up
+  picks, run a first query and a graph algorithm, then point to the docs guide
+  for what the user is building and offer optional AI memory. Use when the user asks to get started with Memgraph, set up
   or try Memgraph locally, run Memgraph in Docker for the first time, or load a
   sample graph dataset.
 compatibility: Docker and curl on macOS or Linux. Uses the Memgraph docs MCP and Memgraph MCP servers when they are connected.
@@ -198,13 +198,13 @@ is talking to another Memgraph, so stop using it and pipe the queries into
    capital cities, Lab draws the cities on a world map because every city has
    `lat` and `lng`.
 
-## 7. Offer a docs question
+## 7. Point to the next guide
 
-Ask: "Want to know something about Memgraph, for example how to keep this data
-after a restart or how to connect from Python?" Answer with the Memgraph docs
-MCP server's search tool and cite the pages it returns.
-If the docs MCP isn't connected, read the docs as Markdown by adding `.md` to a
-`https://memgraph.com/docs/` URL.
+Ask what the user is building and in which language. Search the Memgraph docs
+MCP server for the guide that fits (for example, the client library for their
+language, importing their data, or GraphRAG), and give them that page with a
+one-line summary. If the docs MCP isn't connected, read the docs as Markdown by
+adding `.md` to a `https://memgraph.com/docs/` URL.
 
 ## 8. Offer AI memory (optional)
 
@@ -225,7 +225,10 @@ installing.
 
 Summarize in a few lines: what's running and on which ports, which dataset is
 loaded, how to stop everything, and two next steps that fit what the user said
-they're building.
+they're building. Say that the data is gone once the `memgraph` container is
+removed, and link
+`https://memgraph.com/docs/getting-started/install-memgraph/docker` for keeping
+it.
 
 To stop everything, give the command with the names this flow actually started
 (by default `docker rm -f memgraph memgraph-lab && docker network rm memgraph-start`).
