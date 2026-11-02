@@ -68,10 +68,20 @@ bash <this skill's folder>/scripts/check-ports.sh 7687 7444 3000
      `--schema-info-enabled`), use the Memgraph MCP server's schema tools or
      `CALL schema.node_type_properties()` instead.
   2. **Start a new Memgraph on free ports**, e.g. `7688` and `7445` (check them
-     the same way). The Memgraph MCP server still points at `7687`. To point it
-     at the new Memgraph, the user runs `export MEMGRAPH_URL=bolt://localhost:7688`
-     and starts the agent again from that same shell. Until then, run queries
-     with `mgconsole` inside the container (see step 5).
+     the same way). Then find out where the Memgraph MCP server points; it
+     reads the same `MEMGRAPH_URL` your shell commands see:
+
+     ```shell
+     printenv MEMGRAPH_URL || echo "not set"
+     ```
+
+     - If it's the new Bolt port (e.g. `bolt://localhost:7688`), the MCP
+       server already points at the new Memgraph. Say so and use it.
+     - If it's not set or a different URL, the MCP server points at `7687` (or
+       that URL), not at the new Memgraph. Tell the user that to use it with the
+       new Memgraph, they run `export MEMGRAPH_URL=bolt://localhost:7688` and
+       start the agent again from that same shell. Until then, run queries with
+       `mgconsole` inside the container (see step 5).
 - **Only `3000` or `7444` in use:** pick the next free port (`3001`, `7445`, …)
   and tell the user.
 
@@ -156,8 +166,12 @@ They should match the dataset's `counts`.
 
 ## 6. Run a first query and an algorithm
 
-Use the Memgraph MCP server if it's connected to this Memgraph; otherwise pipe
-the query into `mgconsole` as above.
+Use the Memgraph MCP server if it points at this Memgraph (see step 2):
+`7687` when you started Memgraph there, otherwise when `MEMGRAPH_URL` is the new
+port. Before the first query, confirm it with the node count from the MCP
+server: it should match the counts from step 5. If it doesn't, the MCP server
+is talking to another Memgraph, so stop using it and pipe the queries into
+`mgconsole` as above.
 
 1. **Look at the schema** with the Memgraph MCP server, or with
    `SHOW SCHEMA INFO;`.
