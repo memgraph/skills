@@ -90,16 +90,16 @@ and `3000`.
 
 ## 3. Choose a dataset
 
-Offer the default, a few small alternatives, and "See the other datasets" as
-one more choice (there are more than 30 others). Don't refer to how your
-question interface looks, such as an "Other" option; the user can also name
-any dataset in their own words:
+Offer exactly four choices: the three datasets below and "See the other
+datasets" (there are more than 30 others). Some question tools allow only four
+options, so don't add more. Don't refer to how your question interface looks,
+such as an "Other" option; the user can also name any dataset in their own
+words:
 
 | Dataset | Slug | Size | Good for |
 | --- | --- | --- | --- |
 | Capital cities and borders (default) | `country-capitals` | 212 nodes, 369 relationships | Paths between cities, PageRank, a map in Lab |
 | Game of Thrones deaths | `game-of-thrones-deaths` | 2,677 nodes, 11,967 relationships | Who killed whom, centrality |
-| Karate club friendship network | `karate-club-friendship-network` | 34 nodes, 78 relationships | Community detection on a classic small graph |
 | Europe backpacking | `europe-backpacking` | 92 nodes, 349 relationships | Shortest and cheapest routes |
 
 The full catalog, with each dataset's description, graph model, sample queries
