@@ -17,7 +17,8 @@
     },
     "memgraph": {
       "command": "uvx",
-      "args": ["mcp-memgraph==0.4.1"]
+      "args": ["mcp-memgraph==0.4.1"],
+      "env_vars": ["MEMGRAPH_URL", "MEMGRAPH_USER", "MEMGRAPH_PASSWORD", "MEMGRAPH_DATABASE"]
     }
   },
   "interface": {
