@@ -28,6 +28,16 @@ npx skills add memgraph/skills
 
 Add `--skill <name>` to install a single skill, or `--list` to see them all.
 
+## Get started
+
+With Docker running, ask your agent:
+
+```
+Get started with Memgraph
+```
+
+It runs the `memgraph-start` skill: it starts Memgraph and Memgraph Lab in Docker, loads a sample dataset you pick, and runs a first query and a graph algorithm. To call the skill directly, use `/memgraph:memgraph-start` in Claude Code or `$memgraph-start` in Codex.
+
 ## Manual install
 
 ### With Cursor
