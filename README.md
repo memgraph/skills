@@ -78,6 +78,7 @@ Skills are contextual and auto-loaded based on your conversation. When a request
 | memgraph-python-query-modules | Building custom query modules in Python using the mgp API |
 | memgraph-run-mage-algorithms | Running MAGE graph algorithms: PageRank, community detection, centrality, embeddings, and 70+ modules |
 | memgraph-rust-query-modules | Building custom query modules in Rust using the rsmgp-sys API |
+| memgraph-start | Getting started: running Memgraph and Lab in Docker, loading a sample dataset, and a first query and graph algorithm |
 
 ## Skill Structure
 
