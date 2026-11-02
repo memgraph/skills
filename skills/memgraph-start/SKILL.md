@@ -100,7 +100,7 @@ words:
 | --- | --- | --- | --- |
 | Capital cities and borders (default) | `country-capitals` | 212 nodes, 369 relationships | Paths between cities, PageRank, a map in Lab |
 | Game of Thrones deaths | `game-of-thrones-deaths` | 2,677 nodes, 11,967 relationships | Who killed whom, centrality |
-| Europe backpacking | `europe-backpacking` | 92 nodes, 349 relationships | Shortest and cheapest routes |
+| The Pandora Papers | `icij-pandora-papers` | 389 nodes, 740 relationships | Following officials to offshore companies in a few hops |
 
 The full catalog, with each dataset's description, graph model, sample queries
 and download link, is at `https://download.memgraph.com/datasets/items.v1.json`
