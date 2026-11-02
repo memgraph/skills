@@ -90,8 +90,8 @@ and `3000`.
 
 ## 3. Choose a dataset
 
-Offer the default and a few small alternatives, and say the user can pick any
-other dataset from the Memgraph Lab catalog:
+Offer the default and a few small alternatives, then say there are more than
+30 other sample datasets and offer to list them:
 
 | Dataset | Slug | Size | Good for |
 | --- | --- | --- | --- |
@@ -103,9 +103,10 @@ other dataset from the Memgraph Lab catalog:
 The full catalog, with each dataset's description, graph model, sample queries
 and download link, is at `https://download.memgraph.com/datasets/items.v1.json`
 (the `datasets` list; each item has `slug`, `title`, `description`, `counts`,
-`graphModel.description`, `sampleQueries` and `formats.cypherl.url`). Read it
-when the user wants something else, or to get the graph model and sample
-queries of the chosen dataset.
+`graphModel.description`, `sampleQueries` and `formats.cypherl.url`). If the
+user wants to see the others, read it and list every dataset as its title, its
+`description` and its size, so they can choose by name. Also read it for the
+graph model and sample queries of the chosen dataset.
 
 ## 4. Start Memgraph and Memgraph Lab
 
@@ -186,9 +187,14 @@ is talking to another Memgraph, so stop using it and pipe the queries into
    ORDER BY rank DESC LIMIT 5;
    ```
 
-4. Tell the user to open Memgraph Lab at `http://localhost:3000`, click
-   **Connect now**, and run the same queries to see the graph. For capital
-   cities, the Graph results tab draws them on a world map.
+4. Point the user to Memgraph Lab at `http://localhost:3000` (use the Lab port
+   you chose): they click **Connect now**, paste a query into the Cypher
+   editor and click **Run query**. Give them the exact query to paste, one that
+   returns nodes, relationships or paths (not a table), so the **Graph
+   results** tab can draw it. Use the dataset's sample query as written in the
+   catalog; if you changed it to get a table above, give the original. For
+   capital cities, Lab draws the cities on a world map because every city has
+   `lat` and `lng`.
 
 ## 7. Offer a docs question
 
