@@ -90,8 +90,10 @@ and `3000`.
 
 ## 3. Choose a dataset
 
-Offer the default and a few small alternatives, then say there are more than
-30 other sample datasets and offer to list them:
+Offer the default, a few small alternatives, and "See the other datasets" as
+one more choice (there are more than 30 others). Don't refer to how your
+question interface looks, such as an "Other" option; the user can also name
+any dataset in their own words:
 
 | Dataset | Slug | Size | Good for |
 | --- | --- | --- | --- |
