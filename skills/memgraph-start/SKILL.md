@@ -211,10 +211,10 @@ is talking to another Memgraph, so stop using it and pipe the queries into
 
 ## 7. Point to the next guide
 
-Ask what the user is building and in which language. Search the Memgraph docs
-MCP server for the guide that fits (for example, the client library for their
-language, importing their data, or GraphRAG), and give them that page with a
-one-line summary. If the docs MCP isn't connected, read the docs as Markdown by
+Ask what the user is building and in which language. Find the guide that fits
+(for example, the client library for their language, importing their data, or
+GraphRAG) with the `search_docs` tool of the Memgraph docs MCP server, and give
+them that page with a one-line summary. If the docs MCP isn't connected, read the docs as Markdown by
 adding `.md` to a `https://memgraph.com/docs/` URL.
 
 ## 8. Offer AI memory (optional)
