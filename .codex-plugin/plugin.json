@@ -8,6 +8,7 @@
   },
   "homepage": "https://memgraph.com/docs/ai-ecosystem/skills",
   "repository": "https://github.com/memgraph/skills",
+  "license": "MIT",
   "keywords": ["memgraph", "graph-database", "cypher", "graph-algorithms", "query-modules"],
   "skills": "./skills/",
   "mcpServers": {
