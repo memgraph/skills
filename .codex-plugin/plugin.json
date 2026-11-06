@@ -13,7 +13,7 @@
   "mcpServers": {
     "memgraph-docs": {
       "type": "http",
-      "url": "https://memgraph.docs-mcp.reo.dev/"
+      "url": "https://mcp-docs.memgraph.com"
     },
     "memgraph": {
       "command": "uvx",
