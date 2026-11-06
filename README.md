@@ -7,16 +7,18 @@ A collection of Agent Skills for working with [Memgraph](https://memgraph.com) g
 ### With Claude Code
 
 ```
-/plugin marketplace add memgraph/skills
+/plugin marketplace add memgraph/marketplace
 /plugin install memgraph@memgraph
 ```
 
 ### With Codex
 
 ```bash
-codex plugin marketplace add memgraph/skills
+codex plugin marketplace add memgraph/marketplace
 codex plugin add memgraph@memgraph
 ```
+
+The plugin also adds the Memgraph docs MCP server and the Memgraph MCP server. [memgraph/marketplace](https://github.com/memgraph/marketplace) is the catalog of all Memgraph plugins.
 
 ### With any agent (Cursor, Codex, Claude Code, and others)
 
