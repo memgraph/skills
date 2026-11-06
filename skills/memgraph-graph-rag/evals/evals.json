@@ -1,0 +1,43 @@
+{
+  "skill_name": "memgraph-graph-rag",
+  "evals": [
+    {
+      "id": 1,
+      "name": "hybrid-retrieval-query",
+      "prompt": "I'm building a GraphRAG system on Memgraph. My Chunk nodes have embeddings and I've got Entity nodes linked to them. Write me the hybrid retrieval query that does a vector search over the chunks and then expands out to related context. I want to pass the query embedding, the number of vector hits, and a hop limit in as parameters.",
+      "expected_output": "A Cypher retrieval query that starts with Memgraph's CALL vector_search.search over the chunk vector index (e.g. 'vs_chunks') YIELDing node (and similarity), then expands the matched chunks to related context: entities via (e:Entity)-[:MENTIONED_IN]->(node), a bounded BFS expansion to nearby chunks using -[*bfs..$hop_limit]-, and/or sequential neighbours via the NEXT relationship. All user inputs (embedding, vector_k, hop_limit) are passed as parameters, not string-interpolated, and traversal is bounded rather than unbounded.",
+      "assertions": [
+        "The query runs the vector search with CALL vector_search.search over the chunk vector index (e.g. 'vs_chunks') and YIELDs the matched node.",
+        "The query expands from the matched chunk to related entities through the MENTIONED_IN relationship, e.g. (e:Entity)-[:MENTIONED_IN]->(node).",
+        "Any graph expansion is bounded by an explicit hop limit (e.g. a BFS expansion of the form -[*bfs..$hop_limit]- to a :Chunk) rather than an unbounded variable-length traversal.",
+        "The query embedding, vector_k, and hop limit are passed as query parameters (e.g. $vector_k, $hop_limit) rather than concatenated into the query string."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "graphrag-schema-design",
+      "prompt": "How should I model my documents in Memgraph for a graph RAG setup? I've got long PDFs that I want to chunk and pull named entities out of. What node labels, relationships, and indexes do I need so I can later do vector search plus graph expansion?",
+      "expected_output": "A schema recommendation using the blueprint's stable labels: Document, Chunk, Entity (and Concept). Documents connect to chunks via HAS_CHUNK, entities to the chunks they appear in via MENTIONED_IN, and chunks are chained in reading order via NEXT (entities may relate to each other via RELATES_TO). It should also create a vector index on the Chunk embedding property, e.g. CREATE VECTOR INDEX ... ON :Chunk(embedding), with a dimension that matches the embedding model (example 384).",
+      "assertions": [
+        "The schema uses node labels Document, Chunk, and Entity (Concept may also be included).",
+        "Documents are connected to their chunks via a HAS_CHUNK relationship, e.g. (Document)-[:HAS_CHUNK]->(Chunk).",
+        "Entities are linked to the chunks they appear in via the MENTIONED_IN relationship, e.g. (Entity)-[:MENTIONED_IN]->(Chunk).",
+        "Chunks are chained in reading order via a NEXT relationship, e.g. (Chunk)-[:NEXT]->(Chunk).",
+        "A vector index is created on the Chunk embedding property (e.g. CREATE VECTOR INDEX vs_chunks ON :Chunk(embedding)) with a dimension matching the embedding model (e.g. 384)."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "agent-tools-and-guardrails",
+      "prompt": "I'm wiring up an LLM agent over my Memgraph GraphRAG backend. What tools should I expose to the agent, and what guardrails should each one enforce?",
+      "expected_output": "A recommendation to expose the three blueprint tools: run_query (execute parameterized Cypher), retrieve_context (hybrid vector + graph retrieval taking bounding params like vector_k and hop_limit), and ingest_sources (add documents). It should call out the core guardrails: always answer from retrieved context and say so when context is insufficient, always parameter-bind user inputs instead of string interpolation, bound traversal (max hops / max chunks) to avoid unbounded graph traversal, and reject queries when no vector index exists.",
+      "assertions": [
+        "The answer exposes three agent tools named run_query, retrieve_context, and ingest_sources.",
+        "run_query is described as executing parameterized Cypher (taking a cypher string plus params) rather than interpolated query strings.",
+        "retrieve_context is described as hybrid vector + graph retrieval that takes bounding parameters such as vector_k and hop_limit (and/or max_chunks).",
+        "It states the guardrail that the agent must answer only from retrieved context and say so when the context is insufficient.",
+        "It includes a guardrail that bounds graph traversal (max hops / max chunks, avoid unbounded traversal) and/or rejects queries when no vector index exists."
+      ]
+    }
+  ]
+}

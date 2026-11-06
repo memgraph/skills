@@ -1,0 +1,195 @@
+name: Skill Evals
+
+# Skill-quality evals, separate from validate.yml (which only checks structure).
+#
+# Two tiers, so a PR is always checkable:
+#   1. Schema validation (ALWAYS): a deterministic, key-free gate that validates
+#      every skills/*/evals/evals.json against the harness schema. Hard-fails the
+#      build if any file is malformed. Needs no secret and no `uv sync`.
+#   2. Model eval run (CONDITIONAL): runs each skill's cases WITH and WITHOUT the
+#      skill and reports the delta. This calls the Anthropic API, so it only runs
+#      when the ANTHROPIC_API_KEY repository secret is configured. Without the
+#      secret the job stays green after tier 1 and prints a notice.
+#
+# The model run is REPORT-ONLY by default: it never fails the build unless you
+# opt in to a gate (see the commented --fail-under line in the "Run evals" step).
+
+on:
+  workflow_dispatch:
+    inputs:
+      skill:
+        description: "Skill directory name to evaluate, or 'all'"
+        required: false
+        default: "all"
+      iteration:
+        description: "Iteration number (blank = auto-increment)"
+        required: false
+        default: ""
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "evals/**"
+
+concurrency:
+  group: evals-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so PR diffs resolve
+
+      # Secrets cannot be referenced in a step-level `if:`, so surface the
+      # presence of the key as a string output ("true"/"false") to gate later
+      # steps on. This never exposes the key value itself.
+      - name: Detect API key
+        id: apikey
+        run: echo "has_key=${{ secrets.ANTHROPIC_API_KEY != '' }}" >> "$GITHUB_OUTPUT"
+
+      # ---- Tier 1: ALWAYS-ON, key-free schema gate --------------------------
+      # Validate every skills/*/evals/evals.json with the repo's dependency-free
+      # validator (evals/schema.py, stdlib only). Runs on the runner's system
+      # Python — no `uv sync`, no `anthropic` SDK, no API key required. Hard-fails
+      # if any evals.json is malformed.
+      - name: Validate evals.json schema
+        run: |
+          python3 - <<'PY'
+          import glob, sys
+          from pathlib import Path
+
+          sys.path.insert(0, ".")
+          from evals.schema import EvalValidationError, load_evals
+
+          files = sorted(glob.glob("skills/*/evals/evals.json"))
+          if not files:
+              print("No skills/*/evals/evals.json found — nothing to validate.")
+              sys.exit(0)
+
+          bad = 0
+          for f in files:
+              try:
+                  ef = load_evals(Path(f))
+                  print(f"OK   {f}  ({len(ef.evals)} case(s), skill_name={ef.skill_name!r})")
+              except EvalValidationError as exc:
+                  bad += 1
+                  print(f"FAIL {f}: {exc}")
+
+          print(f"\nValidated {len(files)} file(s); {bad} invalid.")
+          sys.exit(1 if bad else 0)
+          PY
+
+      - name: Determine targets
+        id: targets
+        run: |
+          set -euo pipefail
+          run_all() { echo "mode=all" >> "$GITHUB_OUTPUT"; }
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            skill="${{ github.event.inputs.skill }}"
+            if [ -z "$skill" ] || [ "$skill" = "all" ]; then
+              run_all
+            else
+              echo "mode=list" >> "$GITHUB_OUTPUT"
+              echo "$skill" > changed_skills.txt
+            fi
+            exit 0
+          fi
+
+          # pull_request: evaluate only the changed skills when feasible.
+          base="${{ github.event.pull_request.base.sha }}"
+          changed=$(git diff --name-only "$base"...HEAD || true)
+
+          # If the harness itself changed, its behaviour affects every skill.
+          if echo "$changed" | grep -q '^evals/'; then
+            run_all
+            exit 0
+          fi
+
+          echo "$changed" \
+            | grep -oE '^skills/[^/]+/' \
+            | sed 's#^skills/##; s#/##' \
+            | sort -u > candidate_skills.txt || true
+
+          : > changed_skills.txt
+          while read -r s; do
+            [ -n "$s" ] || continue
+            if [ -f "skills/$s/evals/evals.json" ]; then
+              echo "$s" >> changed_skills.txt
+            fi
+          done < candidate_skills.txt
+
+          if [ -s changed_skills.txt ]; then
+            echo "mode=list" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ---- Tier 2: CONDITIONAL model eval run (needs the API key) -----------
+      # When the key is absent, stop here: the schema gate above already ran and
+      # passed, so the check is green. Just record why the model run was skipped.
+      - name: Model eval run skipped (no API key)
+        if: steps.apikey.outputs.has_key != 'true'
+        run: |
+          echo "## Skill evals" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "ANTHROPIC_API_KEY not configured — skipping model eval run, ran schema validation only." >> "$GITHUB_STEP_SUMMARY"
+
+      # The remaining steps only run when the key IS present. The eval harness
+      # (with/without model calls) needs `uv sync` and the `anthropic` SDK.
+      - name: Install uv
+        if: steps.apikey.outputs.has_key == 'true'
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        if: steps.apikey.outputs.has_key == 'true'
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        if: steps.apikey.outputs.has_key == 'true'
+        run: uv sync
+
+      - name: Run evals
+        if: steps.apikey.outputs.has_key == 'true' && steps.targets.outputs.mode != 'none'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          ITER_ARG=""
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.iteration }}" ]; then
+            ITER_ARG="--iteration ${{ github.event.inputs.iteration }}"
+          fi
+
+          # REPORT-ONLY by default. To make evals gate the build, uncomment GATE
+          # (fails if a skill's WITH-skill mean pass_rate drops below the threshold):
+          GATE=""
+          # GATE="--fail-under 0.6"
+
+          if [ "${{ steps.targets.outputs.mode }}" = "all" ]; then
+            uv run python -m evals.run_evals --all $ITER_ARG $GATE \
+              --github-step-summary "$GITHUB_STEP_SUMMARY"
+          else
+            while read -r s; do
+              [ -n "$s" ] || continue
+              echo "::group::evals for $s"
+              uv run python -m evals.run_evals --skill "$s" $ITER_ARG $GATE \
+                --github-step-summary "$GITHUB_STEP_SUMMARY"
+              echo "::endgroup::"
+            done < changed_skills.txt
+          fi
+
+      - name: No evals to run
+        if: steps.apikey.outputs.has_key == 'true' && steps.targets.outputs.mode == 'none'
+        run: echo "No changed skills have an evals/evals.json — nothing to evaluate." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload eval workspace
+        if: always() && steps.apikey.outputs.has_key == 'true' && steps.targets.outputs.mode != 'none'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-workspace
+          path: skills/*-workspace/**
+          if-no-files-found: ignore

@@ -1,0 +1,41 @@
+{
+  "skill_name": "memgraph-cpp-query-modules",
+  "evals": [
+    {
+      "id": 1,
+      "name": "read-procedure-skeleton",
+      "prompt": "I want to write a custom C++ query module for Memgraph that adds a read-only procedure returning each node's out-degree. Can you give me the module skeleton with proper registration?",
+      "expected_output": "A C++20 query module that registers a read-only procedure inside mgp_init_module using mgp::AddProcedure with mgp::ProcedureType::Read. The procedure callback has the signature (mgp_list *args, mgp_graph *graph, mgp_result *result, mgp_memory *memory), begins with mgp::MemoryDispatcherGuard guard(memory); as its first line, iterates nodes using mgp::Node (e.g. OutDegree()), and returns results via a mgp::RecordFactory built from result with NewRecord() and record.Insert().",
+      "assertions": [
+        "The procedure callback body's first statement is mgp::MemoryDispatcherGuard guard(memory); (the required first line).",
+        "The procedure is registered inside mgp_init_module using mgp::AddProcedure with the type mgp::ProcedureType::Read.",
+        "The procedure callback uses the signature taking (mgp_list *args, mgp_graph *graph, mgp_result *result, mgp_memory *memory).",
+        "Results are produced by constructing a mgp::RecordFactory from result, calling NewRecord(), and inserting output fields with record.Insert(...).",
+        "Out-degree is obtained from a mgp::Node using its OutDegree() method (not a Cypher query)."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "build-deploy-load",
+      "prompt": "I've written a C++ query module for Memgraph. How do I compile it into a shared library, where does the resulting file need to go, and how do I get Memgraph to actually pick it up without restarting?",
+      "expected_output": "Instructions to build the module into a shared object using the standardized C++20 toolchain (the memgraph/mgbuild:v7_ubuntu-24.04 container / Clang 20+, CMake), copy the resulting .so into /usr/lib/memgraph/query_modules/, and load it into a running instance with CALL mg.load_all();",
+      "assertions": [
+        "The built shared library (.so) must be placed in the directory /usr/lib/memgraph/query_modules/.",
+        "The module is loaded into a running Memgraph instance with the Cypher command CALL mg.load_all();",
+        "The answer recommends the standardized C++20 build toolchain — the memgraph/mgbuild container (e.g. memgraph/mgbuild:v7_ubuntu-24.04) and/or Clang 20+ with CMake — for reproducible builds."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "abort-error-handling-function",
+      "prompt": "My C++ Memgraph procedure runs a heavy graph algorithm. I need it to stop cleanly when the query is terminated, and I don't want an unexpected throw to crash the whole Memgraph server. I also want to expose a small helper as a user-defined function callable from Cypher. What's the correct way to do all three?",
+      "expected_output": "Guidance to periodically call graph.CheckMustAbort() inside the loop (which throws mgp::MustAbortException on termination), to wrap the work in a try/catch that never lets exceptions escape the module boundary (catching std::exception and reporting via SetErrorMessage() instead of propagating), and to register the helper with mgp::AddFunction, returning its value with result.SetValue() rather than a RecordFactory.",
+      "assertions": [
+        "The answer calls graph.CheckMustAbort() periodically during the long-running work, and notes it throws mgp::MustAbortException when the query is terminated.",
+        "The answer catches exceptions inside the procedure (e.g. catch (const std::exception &e)) so they never cross the module boundary, reporting the error via SetErrorMessage() instead of propagating.",
+        "The user-defined function is registered with mgp::AddFunction (not mgp::AddProcedure).",
+        "The function returns its value using result.SetValue(...), not a mgp::RecordFactory / NewRecord()."
+      ]
+    }
+  ]
+}

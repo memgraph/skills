@@ -1,3 +1,13 @@
 .venv/
 uv.lock
 __pycache__/
+
+# --- Skill evaluation harness (evals/) ---
+# Eval run outputs live in a sibling "<skill>-workspace/" next to each skill,
+# and are regenerated on every run — never commit them.
+*-workspace/
+skills/*-workspace/
+
+# Ad-hoc / local eval output directories passed via `--out`
+eval-runs/
+.eval-workspace/

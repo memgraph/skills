@@ -1,0 +1,39 @@
+{
+  "skill_name": "memgraph-cypher-syntax",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bfs-shortest-path",
+      "prompt": "In Memgraph, how do I find the shortest path between the node named \"A\" and the node named \"E\"? Give me the Cypher query.",
+      "expected_output": "A Cypher query that uses Memgraph's built-in BFS deep-path-traversal syntax to find the unweighted shortest path, e.g. MATCH p=(a {name: \"A\"})-[*BFS]->(b {name: \"E\"}) RETURN p; It should use the relationship-expansion form -[*BFS]-> rather than Neo4j's shortestPath() function.",
+      "assertions": [
+        "The query uses Memgraph's *BFS relationship-expansion syntax (e.g. -[*BFS]->) to find the shortest path.",
+        "The query does NOT use Neo4j's shortestPath() function.",
+        "The query is a path pattern of the form MATCH p=(...)-[...]->(...) that binds and returns the path variable p."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "weighted-shortest-path-lambda",
+      "prompt": "Write a Memgraph Cypher query that finds the weighted shortest path between two nodes where each relationship has a numeric `weight` property, and also returns the total weight of the path.",
+      "expected_output": "A query using Memgraph's WSHORTEST deep-path traversal with a weight lambda that reads the relationship's weight property, binding a total-weight variable that is returned, e.g. MATCH p=(a)-[*WSHORTEST (r, n | r.weight) total_weight]->(b) RETURN p, total_weight;",
+      "assertions": [
+        "The query uses the *WSHORTEST relationship-expansion algorithm for weighted shortest path.",
+        "The query includes a weight lambda in the two-argument form (r, n | ...) whose expression reads the relationship's weight property (e.g. r.weight).",
+        "The query binds a total-weight variable after the lambda and returns that total weight."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "vector-index-and-search",
+      "prompt": "In Memgraph, how do I create a vector index on the `embedding` property of :Article nodes with 256 dimensions using cosine similarity, and then run a similarity search for the 10 nearest neighbors of a query embedding?",
+      "expected_output": "Two statements: (1) CREATE VECTOR INDEX on :Article(embedding) WITH CONFIG that sets dimension 256 and metric \"cos\"; (2) a CALL vector_search.search(\"<index>\", 10, [query vector]) YIELD node, distance, similarity RETURN ... query that returns the 10 nearest neighbors.",
+      "assertions": [
+        "The answer creates a vector index with CREATE VECTOR INDEX on :Article(embedding).",
+        "The index configuration sets the dimension to 256 and the metric to \"cos\" (cosine).",
+        "The answer runs the search with CALL vector_search.search(...) passing a limit of 10.",
+        "The vector_search.search call YIELDs node and similarity (distance may also be yielded)."
+      ]
+    }
+  ]
+}

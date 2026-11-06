@@ -7,4 +7,13 @@ requires-python = ">=3.11"
 [tool.uv]
 dev-dependencies = [
     "skills-ref @ git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref",
+    # Used only by the eval harness under evals/ (LLM-driven skill evaluation).
+    "anthropic>=0.69",
 ]
+
+# NOTE: The eval CLI is invoked as a module (`uv run python -m evals.run_evals`)
+# rather than a console-script entry point. This project has no build backend and
+# is not itself packaged (it exists to pin dev tooling like skills-ref); adding a
+# [project.scripts] entry would force a build-system and change how `uv sync`
+# treats the repo. `python -m evals.run_evals` works because `evals/` is an
+# importable package in the repo root. See evals/README.md.
