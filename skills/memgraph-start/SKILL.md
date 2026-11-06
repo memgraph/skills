@@ -113,13 +113,16 @@ words:
 | Game of Thrones deaths | `game-of-thrones-deaths` | 2,677 nodes, 11,967 relationships | Who killed whom, centrality |
 | The Pandora Papers | `icij-pandora-papers` | 389 nodes, 740 relationships | Following officials to offshore companies in a few hops |
 
-The full catalog, with each dataset's description, graph model, sample queries
-and download link, is at `https://download.memgraph.com/datasets/items.v1.json`
-(the `datasets` list; each item has `slug`, `title`, `description`, `counts`,
-`graphModel.description`, `sampleQueries` and `formats.cypherl.url`). If the
-user wants to see the others, read it and list every dataset as its title, its
-`description` and its size, so they can choose by name. Also read it for the
-graph model and sample queries of the chosen dataset.
+If the user wants to see the others, read
+`https://memgraph.com/docs/querying/sample-datasets.md`, which lists every
+dataset with its slug, description and size. List them by title, description
+and size so they can choose by name, and give them the page without the `.md`
+to browse later.
+
+For the chosen dataset's graph model, sample queries and download link, read
+the catalog at `https://download.memgraph.com/datasets/items.v1.json` (the
+`datasets` list; each item has `slug`, `title`, `description`, `counts`,
+`graphModel.description`, `sampleQueries` and `formats.cypherl.url`).
 
 ## 4. Start Memgraph and Memgraph Lab
 
