@@ -5,7 +5,7 @@
   "author": {
     "name": "Memgraph"
   },
-  "license": "MIT",
+  "license": "Apache-2.0",
   "keywords": ["memgraph", "graph-database", "cypher", "graph-algorithms", "query-modules"],
   "mcpServers": {
     "memgraph-docs": {
