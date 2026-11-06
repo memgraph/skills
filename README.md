@@ -28,6 +28,16 @@ npx skills add memgraph/skills
 
 Add `--skill <name>` to install a single skill, or `--list` to see them all.
 
+## Get started
+
+With Docker running, ask your agent:
+
+```
+Get started with Memgraph
+```
+
+It runs the `memgraph-start` skill: it starts Memgraph and Memgraph Lab in Docker, loads a sample dataset you pick, and runs a first query and a graph algorithm. To call the skill directly, use `/memgraph:memgraph-start` in Claude Code or `$memgraph-start` in Codex. In Codex, start it with `codex -a on-request` so the agent can ask to run Docker outside its sandbox. To be asked less, answer the first `docker` and `curl` prompts with **Yes, and don't ask again for commands that start with …**, or choose **Approve for me** in `/permissions`, where Codex's reviewer approves low-risk commands for you.
+
 ## Manual install
 
 ### With Cursor
@@ -78,6 +88,7 @@ Skills are contextual and auto-loaded based on your conversation. When a request
 | memgraph-python-query-modules | Building custom query modules in Python using the mgp API |
 | memgraph-run-mage-algorithms | Running MAGE graph algorithms: PageRank, community detection, centrality, embeddings, and 70+ modules |
 | memgraph-rust-query-modules | Building custom query modules in Rust using the rsmgp-sys API |
+| memgraph-start | Getting started: running Memgraph and Lab in Docker, loading a sample dataset, and a first query and graph algorithm |
 
 ## Skill Structure
 
