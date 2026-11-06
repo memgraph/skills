@@ -134,7 +134,7 @@ docker run -d --name memgraph --network memgraph-start \
   memgraph/memgraph-mage:3.14.0 --schema-info-enabled=true
 docker run -d --name memgraph-lab --network memgraph-start -p 3000:3000 \
   -e QUICK_CONNECT_MG_HOST=memgraph -e QUICK_CONNECT_MG_PORT=7687 \
-  memgraph/lab:3.14.1
+  memgraph/lab:3.14.2
 ```
 
 Keep the image tags as written: they're the versions this skill is tested with.
