@@ -192,4 +192,5 @@ docker run -it memgraph/mgconsole:latest --host host.docker.internal
 
 ## References
 
-- Memgraph CLI docs: https://memgraph.com/docs/getting-started/cli
+- Memgraph CLI docs: https://memgraph.com/docs/getting-started/cli.md
+- Index of all docs pages, as Markdown: https://memgraph.com/docs/llms.txt

@@ -269,4 +269,4 @@ def long_running_analysis(context: mgp.ProcCtx) -> mgp.Record(result=int):
 
 # Full Python API
 
-For a full description of a Pyhton API visit https://memgraph.com/docs/custom-query-modules/python/python-api
+For a full description of the Python API visit https://memgraph.com/docs/custom-query-modules/python/python-api.md
