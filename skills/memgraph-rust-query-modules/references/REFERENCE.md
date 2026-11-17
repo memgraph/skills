@@ -724,6 +724,6 @@ define_procedure!(pagerank, |memgraph: &Memgraph| -> Result<()> {
 # Full Rust API
 
 For the complete Rust API documentation, visit:
-- [Rust API Documentation](https://memgraph.com/docs/custom-query-modules/rust/rust-api)
-- [Rust Example](https://memgraph.com/docs/custom-query-modules/rust/rust-example)
+- [Rust API Documentation](https://memgraph.com/docs/custom-query-modules/rust/rust-api.md)
+- [Rust Example](https://memgraph.com/docs/custom-query-modules/rust/rust-example.md)
 - [Memgraph GitHub - Rust Modules](https://github.com/memgraph/memgraph/tree/master/mage/rust)

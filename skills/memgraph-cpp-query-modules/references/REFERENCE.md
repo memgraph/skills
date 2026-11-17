@@ -554,4 +554,4 @@ mgp::AddProcedure(GetNeighbors, "get_neighbors",
 ## Official Documentation
 
 For the complete and latest API documentation, see:
-https://memgraph.com/docs/custom-query-modules/cpp/cpp-api
+https://memgraph.com/docs/custom-query-modules/cpp/cpp-api.md
