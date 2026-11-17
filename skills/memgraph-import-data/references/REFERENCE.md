@@ -31,7 +31,7 @@ LOAD CSV FROM <location> [WITH CONFIG {"aws_region": .., "aws_access_key": .., "
 
 - In transactional mode each write creates a `Delta` of about 56 bytes; a 10-million-row
   transaction holds hundreds of MB of deltas until commit. Batch, or use analytical mode.
-- `SHOW STORAGE INFO;` reports `memory_res`, `peak_memory_res`, vertex and edge counts.
+- `SHOW STORAGE INFO;` reports `memory_res` and `peak_memory_res` for the whole instance. `SHOW STORAGE INFO ON CURRENT DATABASE;` reports `vertex_count` and `edge_count`.
 - Snapshots run every `--storage-snapshot-interval` seconds (default 300) and keep
   `--storage-snapshot-retention-count` copies (default 3). For very large imports raise the interval
   so snapshots do not overlap. Analytical mode writes no WAL. Switching back to transactional
