@@ -1,12 +1,13 @@
 ---
 name: memgraph-run-mage-algorithms
 description: >-
-  Run MAGE (Memgraph Advanced Graph Extensions) graph algorithms from Cypher,
-  including built-in deep path traversals (BFS, DFS, WSP, ASP, KSP), PageRank,
-  community detection, centrality, node embeddings, LLM integration, and 70+
-  algorithm modules. Use when the user asks to run a graph algorithm, find
-  shortest paths, detect communities, compute centrality, generate embeddings,
-  or call any MAGE procedure.
+  Run graph algorithms in Memgraph with MAGE (Memgraph Advanced Graph
+  Extensions), called from Cypher: PageRank and other centrality measures,
+  community detection (Louvain, Leiden, label propagation), node similarity,
+  embeddings, link prediction and 70+ other modules. Use whenever the user wants
+  to find the most important, central or influential nodes, groups or clusters
+  of tightly connected nodes, similar nodes, fraud rings or recommendations, or
+  asks to run any MAGE procedure, even if they don't name an algorithm.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
 metadata:
   version: "0.0.1"

@@ -1,11 +1,12 @@
 ---
 name: memgraph-model-graph-data
 description: >-
-  Design graph data models for Memgraph using Labeled Property Graph (LPG)
-  principles. Use when the user asks how to model data as a graph, design a
-  schema, decide between properties and relationships, structure nodes and edges,
-  import CSV/Parquet into a graph, build a knowledge graph, or optimize a
-  Memgraph data model for performance and memory.
+  Design graph data models for Memgraph using Labeled Property Graph principles.
+  Use whenever the user plans how to represent their domain in Memgraph: which
+  things become nodes, labels, relationships or properties, whether to store
+  something as a node or a property, how to model time, events, hierarchies or
+  many-to-many links, or how to reshape tables or a knowledge graph into a graph
+  that queries fast and fits in memory.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
 metadata:
   version: "0.0.1"

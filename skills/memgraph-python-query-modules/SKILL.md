@@ -1,6 +1,12 @@
 ---
 name: memgraph-python-query-modules
-description: Develop custom query modules in Python for Memgraph graph database. Use when creating custom graph algorithms, procedures (@mgp.read_proc, @mgp.write_proc), or functions (@mgp.function) for Memgraph. Covers the mgp Python API, graph traversal, data transformations, and module deployment.
+description: >-
+  Write custom query modules for Memgraph in Python: procedures (@mgp.read_proc,
+  @mgp.write_proc) and functions (@mgp.function) that Cypher can call, using the
+  mgp API. Use whenever the user wants custom logic inside Memgraph that Cypher
+  can't express, wants to call their own Python code from a query, or adds a
+  procedure or function, and Python is the language or none was named. Covers
+  graph traversal, data transformations and loading the module.
 compatibility: Requires Memgraph instance (Docker recommended), Python 3.7+
 metadata:
   version: "0.0.1"

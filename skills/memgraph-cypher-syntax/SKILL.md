@@ -1,11 +1,14 @@
 ---
 name: memgraph-cypher-syntax
 description: >-
-  Write Cypher queries for Memgraph, including Memgraph-specific extensions like
-  deep path traversals (BFS, DFS, WSP, ASP, KSP with filter/weight lambdas),
-  text and vector search, parallel execution, and CALL subqueries. Use when the
-  user asks to write, fix, or optimize a Cypher query for Memgraph, or asks
-  about Cypher syntax differences between Memgraph and Neo4j.
+  Write, fix, explain and speed up Cypher queries for Memgraph. Covers
+  Memgraph's own syntax that differs from Neo4j: shortest and weighted paths and
+  k-hop traversals with BFS, DFS, WSHORTEST, ALLSHORTEST and KSHORTEST and their
+  filter and weight lambdas; text and vector search; CALL subqueries; parallel
+  execution. Use whenever the user wants a Memgraph query: finding paths or
+  neighbours a number of hops away, filtering a traversal by relationship type
+  or property, rewriting a slow or failing query, or porting a query from Neo4j,
+  even if they don't say "Cypher".
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
 metadata:
   version: "0.0.1"
