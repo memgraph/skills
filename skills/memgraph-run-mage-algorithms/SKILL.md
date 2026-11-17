@@ -25,7 +25,7 @@ MAGE is pre-installed in Docker images `memgraph/memgraph-mage` and
 `memgraph/memgraph-platform`.
 
 ```shell
-docker run -p 7687:7687 --name memgraph memgraph/memgraph-mage:3.2
+docker run -p 7687:7687 --name memgraph memgraph/memgraph-mage:3.14.0
 ```
 
 For GPU algorithms, add `--gpus all` and use a `-cuda` image tag.

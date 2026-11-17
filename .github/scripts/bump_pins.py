@@ -41,8 +41,8 @@ def tracked_files():
 
 def main():
     pins = {
-        r"memgraph/memgraph-mage:(\d+\.\d+\.\d+)\b": ("memgraph/memgraph-mage:{}", latest_docker_tag("memgraph/memgraph-mage")),
-        r"memgraph/lab:(\d+\.\d+\.\d+)\b": ("memgraph/lab:{}", latest_docker_tag("memgraph/lab")),
+        r"memgraph/memgraph-mage:(\d+\.\d+(?:\.\d+)?)\b(?!\.\d)": ("memgraph/memgraph-mage:{}", latest_docker_tag("memgraph/memgraph-mage")),
+        r"memgraph/lab:(\d+\.\d+(?:\.\d+)?)\b(?!\.\d)": ("memgraph/lab:{}", latest_docker_tag("memgraph/lab")),
         r"mcp-memgraph==(\d+\.\d+\.\d+)\b": ("mcp-memgraph=={}", latest_pypi("mcp-memgraph")),
     }
     changes = []
@@ -52,8 +52,8 @@ def main():
         for pattern, (template, latest) in pins.items():
             for old in set(re.findall(pattern, new)):
                 if old != latest:
-                    new = new.replace(template.format(old), template.format(latest))
                     changes.append(f"- `{path}`: `{template.format(old)}` → `{template.format(latest)}`")
+            new = re.sub(pattern, lambda m: template.format(latest), new)
         if new != text:
             path.write_text(new)
 

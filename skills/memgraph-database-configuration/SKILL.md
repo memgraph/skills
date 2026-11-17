@@ -112,8 +112,12 @@ Requires `TRANSACTION_MANAGEMENT` privilege to see/terminate other users' transa
 SET GLOBAL TRANSACTION ISOLATION LEVEL SNAPSHOT ISOLATION;
 SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;
 SET NEXT TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-SHOW STORAGE INFO;
+SHOW STORAGE INFO ON CURRENT DATABASE;
 ```
+
+To check the level in use, read `storage_isolation_level` from `SHOW STORAGE INFO ON CURRENT DATABASE`.
+The unscoped `SHOW STORAGE INFO` reports `global_isolation_level`, which is the start-up default
+(`--isolation-level`) and doesn't change after `SET GLOBAL TRANSACTION ISOLATION LEVEL`.
 
 | Level | Default | Protects against |
 |-------|---------|------------------|
@@ -171,8 +175,12 @@ Same for LocalTime, LocalDateTime, ZonedDateTime.
 STORAGE MODE IN_MEMORY_TRANSACTIONAL;
 STORAGE MODE IN_MEMORY_ANALYTICAL;
 STORAGE MODE ON_DISK_TRANSACTIONAL;
-SHOW STORAGE INFO;
+SHOW STORAGE INFO ON CURRENT DATABASE;
 ```
+
+To check the mode in use, read `storage_mode` from `SHOW STORAGE INFO ON CURRENT DATABASE`.
+The unscoped `SHOW STORAGE INFO` reports `global_storage_mode`, which is the start-up default
+(`--storage-mode`) and doesn't change after `STORAGE MODE ...`.
 
 | Mode | ACID | WAL | Periodic snapshots | Use case |
 |------|------|-----|-------------------|----------|
