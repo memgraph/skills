@@ -1,0 +1,41 @@
+{
+  "skill_name": "memgraph-mgconsole-cli",
+  "evals": [
+    {
+      "id": 1,
+      "name": "connect-macos-docker-ssl",
+      "prompt": "I'm on my Mac with Memgraph running locally, and I want to connect to it using mgconsole in Docker, authenticating with my username and password over an encrypted connection. What command should I run?",
+      "expected_output": "A single docker run command using the memgraph/mgconsole image that connects from the container to Memgraph on the Mac host via --host host.docker.internal, passes --username and --password for authentication, and enables encryption with --use_ssl. For example: docker run -it memgraph/mgconsole:latest --host host.docker.internal --username <user> --password <pass> --use_ssl",
+      "assertions": [
+        "The answer runs mgconsole from the Docker image, e.g. `docker run -it memgraph/mgconsole:latest`.",
+        "It sets `--host host.docker.internal` so the container can reach Memgraph running on the macOS host.",
+        "It supplies credentials using the `--username` and `--password` flags.",
+        "It enables the encrypted connection with the `--use_ssl` flag."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "csv-export-non-interactive",
+      "prompt": "How can I run a Cypher query with mgconsole and get the results as CSV saved to a file, without opening the interactive shell?",
+      "expected_output": "Guidance to run mgconsole non-interactively by piping the query into it via stdin (e.g. echo \"MATCH (n) RETURN n;\" | docker run -i memgraph/mgconsole:latest) while setting --output_format csv, and redirecting stdout to a file (e.g. > results.csv). It should not suggest cypherl for arbitrary queries, since cypherl output is limited to DUMP DATABASE.",
+      "assertions": [
+        "The answer sets `--output_format csv` to produce CSV output.",
+        "It runs non-interactively by piping the query in via stdin (e.g. `echo \"...;\" | docker run -i memgraph/mgconsole:latest`) rather than typing at the interactive `memgraph>` prompt.",
+        "It redirects standard output to a file (e.g. `> results.csv`) to save the results.",
+        "It does NOT propose the `cypherl` output format for this, since cypherl is limited to DUMP DATABASE operations."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "batched-parallel-import",
+      "prompt": "I need to load a very large .cypherl file with millions of statements into Memgraph through mgconsole as fast as possible. How do I speed up the import?",
+      "expected_output": "Guidance to switch mgconsole from the default serial import mode to the batched-parallel import mode, tuning throughput with --batch_size and --workers_number, and to feed the .cypherl file into mgconsole non-interactively via stdin (e.g. piping/redirecting the file into docker run -i memgraph/mgconsole:latest).",
+      "assertions": [
+        "The answer recommends mgconsole's `batched-parallel` import mode instead of the default `serial` mode.",
+        "It mentions tuning the import with `--batch_size` and/or `--workers_number`.",
+        "It feeds the .cypherl file into mgconsole non-interactively via stdin (e.g. piping or redirecting the file into `docker run -i memgraph/mgconsole:latest`).",
+        "It correctly identifies `serial` as the default (slower) import mode."
+      ]
+    }
+  ]
+}

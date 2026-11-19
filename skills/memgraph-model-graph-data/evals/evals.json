@@ -1,0 +1,43 @@
+{
+  "skill_name": "memgraph-model-graph-data",
+  "evals": [
+    {
+      "id": 1,
+      "name": "categories-as-nodes-not-array",
+      "prompt": "I'm modeling a product catalog in Memgraph. Each product belongs to one or more categories like \"Dairy\" and \"Organic\". Should I just store the categories as a list property on the product node, or is there a better way? I also want to find other products that share a category.",
+      "expected_output": "Guidance that categories should be modeled as separate :Category nodes connected to :Product nodes via a typed relationship (e.g. BELONGS_TO), NOT as an array property, because categories are a shared concept you query across. Should justify using the property-vs-relationship framework and show the co-category traversal query.",
+      "assertions": [
+        "Recommends modeling categories as separate :Category nodes connected by a typed relationship (e.g. [:BELONGS_TO]) rather than as an array/list property on the Product node.",
+        "Justifies the choice by noting categories are a shared concept queried across entities (relationships are preferred when a value is shared across nodes and you frequently query which nodes share it).",
+        "Explicitly identifies storing categories as an array property as an anti-pattern.",
+        "Shows a traversal query that finds products sharing a category, of the form MATCH (:Product)-[:BELONGS_TO]->(c)<-[:BELONGS_TO]-(other:Product)."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "csv-import-workflow",
+      "prompt": "I have a large people.csv file (Name, Age, Date_of_Birth columns) plus a friendships file. How do I import this into Memgraph as a graph the right way? I want it to be fast and not create duplicate relationships.",
+      "expected_output": "A CSV import workflow that creates indexes before importing, uses LOAD CSV WITH HEADER, converts the string CSV values to proper types (toInteger, date), uses MERGE rather than CREATE for relationships to avoid duplicates, and batches large loads (USING PERIODIC COMMIT and/or IN_MEMORY_ANALYTICAL storage mode).",
+      "assertions": [
+        "Creates indexes BEFORE the import on the MATCH/MERGE key properties (e.g. CREATE INDEX ON :Person(name)).",
+        "Uses LOAD CSV FROM ... WITH HEADER AS row to read the file.",
+        "Converts the string CSV values to proper types, e.g. toInteger(row.Age) for age and date(row.Date_of_Birth) for the date, noting CSV values are always strings.",
+        "Uses MERGE (not CREATE) when creating the friendship relationships to avoid duplicate relationships.",
+        "Speeds up the large load via batching with USING PERIODIC COMMIT and/or switching to STORAGE MODE IN_MEMORY_ANALYTICAL for bulk import."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "memory-optimized-types-and-indexing",
+      "prompt": "My Memgraph graph is using more RAM than I expected. I'm currently storing dates and ages as strings, and I'm not sure how indexing works here. How should I model the properties and set up indexes to keep memory down and queries fast?",
+      "expected_output": "Memory-optimization guidance specific to Memgraph's in-memory storage: prefer temporal types (date()/datetime()) over string dates and Integer/Boolean/Enum over string equivalents; note that label-property indexes are NOT auto-created and should be added only on hot query fields; recommend running ANALYZE GRAPH after loading data.",
+      "assertions": [
+        "Recommends using Memgraph temporal types (date()/datetime()) instead of storing dates as strings.",
+        "Recommends numeric Integer (and Boolean/Enum where applicable) over string representations of numbers to reduce RAM and speed up comparisons.",
+        "States that label-property indexes are NOT auto-created in Memgraph and must be created explicitly, only on frequently queried (hot) properties rather than every property.",
+        "Recommends running ANALYZE GRAPH after the data is loaded.",
+        "Ties the advice to Memgraph's in-memory storage, where property types directly affect RAM usage."
+      ]
+    }
+  ]
+}
