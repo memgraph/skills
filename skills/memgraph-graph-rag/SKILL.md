@@ -82,7 +82,7 @@ Pick one of these:
 
 - **Toolkit-based**: `unstructured2graph` + `lightrag-memgraph`
 - **Custom ETL**: your parser + entity extractor + Cypher loader
-- **Batch migration**: sql2graph for relational sources
+- **Batch migration**: `structured2graph` for relational sources
 
 Ingestion must always produce:
 
