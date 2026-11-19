@@ -1,6 +1,13 @@
 ---
 name: memgraph-graph-rag
-description: Language-agnostic blueprint for building GraphRAG systems with Memgraph and agent tooling. Covers end-to-end architecture, schema design, ingestion, hybrid retrieval, tool contracts, and evaluation. Use when designing GraphRAG platforms that must work across multiple programming languages.
+description: >-
+  Build GraphRAG with Memgraph: LLM apps, chatbots and agents that retrieve
+  context from a knowledge graph. Covers architecture, schema design, turning
+  documents into a graph, hybrid retrieval that combines vector search, text
+  search and graph traversal, tool contracts for agents, and evaluation, in any
+  programming language. Use whenever the user builds RAG or question answering
+  over documents on Memgraph, or wants to combine embeddings or vector search
+  with graph traversal.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
 metadata:
   version: "0.0.1"

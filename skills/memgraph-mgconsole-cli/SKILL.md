@@ -1,6 +1,12 @@
 ---
 name: memgraph-mgconsole-cli
-description: Guide to using Memgraph's mgconsole CLI for connecting to Memgraph, running Cypher, configuring output, and using interactive or non-interactive modes. Use when the user asks how to install, connect, or run queries with mgconsole.
+description: >-
+  Use mgconsole, Memgraph's command-line client: install it, connect to a local,
+  Docker or remote Memgraph, run queries interactively or from a script, run
+  .cypherl files, and set the output format (tabular, CSV, Cypher). Use whenever
+  the user wants to work with Memgraph from a terminal or shell script, pipe
+  queries into Memgraph, or print results in a given format, even if they don't
+  mention mgconsole.
 compatibility: Requires access to a running Memgraph instance. Docker recommended for mgconsole.
 metadata:
   author: memgraph

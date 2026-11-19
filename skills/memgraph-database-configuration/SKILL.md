@@ -1,10 +1,13 @@
 ---
 name: memgraph-database-configuration
 description: >-
-  Configure Memgraph triggers, transactions, storage modes, data durability,
-  and memory settings. Use when the user asks about triggers, transaction
-  isolation levels, storage modes (transactional vs analytical), snapshots,
-  WAL, memory limits, data types, or database runtime configuration.
+  Configure how Memgraph runs: triggers, transactions and isolation levels,
+  storage modes (in-memory transactional, in-memory analytical, on-disk),
+  snapshots and WAL durability, memory limits and memory use, and data types.
+  Use whenever the user wants something to happen automatically when data
+  changes, Memgraph uses too much RAM or runs out of memory, a big load needs
+  analytical mode, they ask how data survives a restart, or they want to check
+  or change a runtime setting.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
 metadata:
   version: "0.0.1"

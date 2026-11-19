@@ -1,10 +1,12 @@
 ---
 name: memgraph-indexes-and-constraints
 description: >-
-  Create and manage Memgraph indexes, constraints, and enums. Use when the user
-  asks about indexing strategy, creating or dropping indexes, schema enforcement,
-  uniqueness or existence constraints, data type constraints, enums, or
-  ANALYZE GRAPH.
+  Create and manage Memgraph indexes, constraints and enums, and pick the right
+  index for a query. Use whenever lookups, filters or MATCH by a property are
+  slow, a query scans every node, the user wants a property to be unique or
+  required (no duplicate emails, ids that must exist), wants to enforce a
+  property's type or define an enum, or asks about indexing strategy, dropping
+  indexes or ANALYZE GRAPH.
 compatibility: Any language with a Bolt-compatible driver. Memgraph instance required.
 metadata:
   version: "0.0.1"

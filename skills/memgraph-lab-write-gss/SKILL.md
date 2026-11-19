@@ -1,10 +1,11 @@
 ---
 name: memgraph-lab-write-gss
 description: >-
-  Write and edit Graph Style Script (GSS) code for Memgraph Lab graph
-  visualization. Use when the user asks to style graphs, change node or edge
-  colors, add labels, set images, configure graph layouts, or write any GSS /
-  Graph Style Script code for Memgraph Lab.
+  Write and edit Graph Style Script (GSS), which controls how Memgraph Lab draws
+  graphs. Use whenever the user wants to change how their graph looks in
+  Memgraph Lab: node or edge colors, sizes, the captions or labels shown on
+  nodes, icons and images, edge width, or layout, including styling by a
+  property or label, even if they don't mention GSS.
 compatibility: Memgraph Lab required.
 metadata:
   version: "0.0.1"
